@@ -1,0 +1,34 @@
+<config xmlns="http://www.ehcache.org/v3"
+        xmlns:jsr107="http://www.ehcache.org/v3/jsr107"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.0.xsd
+                            http://www.ehcache.org/v3/jsr107 http://www.ehcache.org/schema/ehcache-107-ext-3.0.xsd">
+    <service>
+        <jsr107:defaults enable-management="true" enable-statistics="true"/>
+    </service>
+    <cache alias="entityCache">
+        <key-type>java.lang.Long</key-type>
+        <value-type>main.blog.domain.entity.PostEntity</value-type>
+        <expiry>
+            <ttl unit="seconds">600</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">1000</heap>
+            <offheap unit="MB">100</offheap>
+        </resources>
+    </cache>
+
+    <cache alias="postsService" uses-template="default-cache">
+        <key-type>java.lang.Long</key-type> <!-- 캐시 키 유형을 메서드의 매개변수 유형에 맞춰 설정 -->
+        <value-type>main.blog.domain.dto.PostDTO</value-type> <!-- 서비스 메서드의 반환 유형에 맞춰 설정 -->
+    </cache>
+    <cache-template name="default-cache">
+        <expiry>
+            <ttl unit="seconds">600</ttl> <!-- 10분 동안 유효 -->
+        </expiry>
+        <resources>
+            <heap unit="entries">1000</heap>
+            <offheap unit="MB">100</offheap>
+        </resources>
+    </cache-template>
+</config>

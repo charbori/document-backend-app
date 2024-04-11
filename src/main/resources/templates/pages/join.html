@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Blog</title>
+    <th:block th:insert="layout/fragments/head :: headerFragment"></th:block>
+</head>
+<body>
+    <h1>Join</h1>
+    <form action="/joinAction" method="POST" name="joinForm">
+        <input id="username" type="text" name="username" placeholder="Username"/>
+        <input id="password" type="password" name="password" placeholder="Password"/>
+        <input type="hidden" name="_csrf" value="{{_csrf.token}}"/>
+        <input type="submit" value="Join"/>
+    </form>
+</body>
+</html>

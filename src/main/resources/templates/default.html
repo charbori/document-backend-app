@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Blog</title>
+    <th:block th:insert="~{layout/fragments/head :: headerFragment}"></th:block>
+</head>
+<body>
+    <div class="content">
+        <div th:replace="~{layout/fragments/nav :: navFragment}"></div>
+
+        <div class="container mt-3">
+            <div class="row">
+                <!-- 포스트 아이템 반복 -->
+                <div class="col-md-4 mb-3" th:each="post : ${posts}">
+                    <a th:href="|/post/${post.id}|" style="text-decoration: none; color: inherit;">
+                        <div class="card">
+                            <img class="card-img-top p-2" th:src="|/images/${post.imageName}|" alt="Post Image">
+                            <div class="card-body">
+                                <h5 class="card-title" th:text="${post.title}">Post Title</h5>
+                                <p class="card-text" th:text="${post.content}">Some details about the post...</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <a class="btn btn-primary mt-2 mb-4" href="/post/regist">글작성</a>
+                </div>
+            </div>
+        </div>
+        <div th:if="${nextPage}" class="row mt-3">
+            <div class="col text-center">
+                <a class="btn btn-primary mt-2 mb-4"
+                    th:href="|/?page=${nextPage}|">더보기</a>
+            </div>
+        </div>
+    </div>
+    <footer th:replace="layout/fragments/footer :: footerFragment"></footer>
+</body>
+</html>
