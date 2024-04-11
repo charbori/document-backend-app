@@ -1,6 +1,5 @@
 package main.blog.web.api;
 
-import io.minio.errors.MinioException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import main.blog.domain.dto.VideoDTO;
