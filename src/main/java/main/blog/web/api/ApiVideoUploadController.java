@@ -22,12 +22,8 @@ public class ApiVideoUploadController {
     @RequestMapping("/video/{id}")
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<?> uploadVideo(@PathVariable("id") Long id) throws GeneralSecurityException, IOException {
-
         YoutubeChannelDownload youtubeChannelDownload = new YoutubeChannelDownload();
-
         youtubeChannelDownload.createVideo();
-
-
         return ResponseEntity.ok("done");
     }
 }

@@ -45,8 +45,8 @@ public class ApiUserController {
 
     @PostMapping("/auth/login")
     public ResponseEntity<?> getUser(@Valid @RequestBody JoinDTO joinDTO) {
-        log.info("login dto = {}", joinDTO);
         String token = authService.login(joinDTO);
+        log.info("login dto = {} token={}", joinDTO, token);
         return ApiResponse.success(new ApiResponseMessage(token, ""));
     }
 

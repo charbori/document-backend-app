@@ -19,7 +19,7 @@ import java.util.ArrayList;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class VideoDTO  implements Serializable {
+public class VideoDTO implements Serializable {
 
     private long id;
 
@@ -36,6 +36,8 @@ public class VideoDTO  implements Serializable {
     @NotBlank
     private String videoPath;
     private String tag;
+    private String videoType;
+    private String role;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -61,6 +63,25 @@ public class MinioService {
         }
     }
 
+    public String uploadTusFile(InputStream fileIo, String filename, long fileSize, String contentType) throws MinioException, NoSuchAlgorithmException, IOException, InvalidKeyException {
+        try {
+            minioClient.putObject(
+                    PutObjectArgs.builder().bucket(bucketName).object(filename).stream(
+                                    fileIo, fileSize, -1)
+                            .contentType(contentType)
+                            .build());
+            return "File uploaded successfully. File name: " + filename;
+        } catch (MinioException e) {
+            throw new MinioException(e.getMessage());
+        } catch (NoSuchAlgorithmException e) {
+            throw new NoSuchAlgorithmException(e);
+        } catch (InvalidKeyException e) {
+            throw new InvalidKeyException(e);
+        } catch (IOException e) {
+            throw new IOException(e);
+        }
+    }
+
     public ResponseEntity<InputStreamResource> downloadFile(String filename) {
         try {
             InputStreamResource resource = new InputStreamResource(minioClient.getObject(
@@ -71,6 +92,7 @@ public class MinioService {
 
             return ResponseEntity.ok()
                     .headers(headers)
+                    //.contentType(MediaType.IMAGE_PNG)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(resource);
 

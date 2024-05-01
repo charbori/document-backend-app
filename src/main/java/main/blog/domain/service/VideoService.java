@@ -9,15 +9,19 @@ import main.blog.domain.entity.VideoEntity;
 import main.blog.domain.repository.UserRepository;
 import main.blog.domain.repository.VideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.AccessDeniedException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,9 +37,6 @@ public class VideoService {
 
     @Autowired
     private MinioService minioService;
-
-    @Autowired
-    private FileStorageService fileStorageService;
 
     public List<VideoEntity> videoList() {
         List<VideoEntity> videosList = videoRepository.findAll();
@@ -53,10 +54,11 @@ public class VideoService {
         videoEntity.setVideoPath(videoDTO.getVideoPath());
         videoEntity.setThumbnailPath(videoDTO.getThumbnailPath());
         videoEntity.setStatus(videoDTO.getStatus());
+        videoEntity.setCreatedAt(LocalDateTime.now());
         videoEntity.setStatus(videoDTO.getStatus());
 
-        videoRepository.save(videoEntity);
-        //fileStorageService.storeFile(file);
+        this.createVideoMetaData(videoEntity);
+
         String response = null;
         try {
             response = minioService.uploadFile(file, videoDTO.getVideoPath());
@@ -74,9 +76,28 @@ public class VideoService {
         return response;
     }
 
+    public VideoEntity createVideoMetaData(VideoEntity videoEntity) {
+        return videoRepository.save(videoEntity);
+    }
+
+    public String registTusVideo(InputStream io, String filename, long filesize, String contentTypeName) {
+        String response = null;
+        try {
+            response = minioService.uploadTusFile(io, filename, filesize, contentTypeName);
+        } catch (MinioException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException(e);
+        }
+        return response;
+    }
+
     public VideoEntity updateVideo(long id, @Validated VideoDTO videoDTO) throws AccessDeniedException {
         VideoEntity videoEntity = new VideoEntity();
-
         videoEntity.setName(videoDTO.getName());
         videoEntity.setDescription(videoDTO.getDescription());
         videoEntity.setTag(videoDTO.getTag());
@@ -84,17 +105,15 @@ public class VideoService {
         videoEntity.setThumbnailPath(videoDTO.getThumbnailPath());
         videoEntity.setStatus(videoDTO.getStatus());
         videoEntity.setStatus(videoDTO.getStatus());
-
+        videoEntity.setUpdatedAt(LocalDateTime.now());
         return videoRepository.save(videoEntity);
     }
 
     public ResponseEntity<?> downloadVideo(Long id) {
-
         Optional<VideoEntity> videoEntityOptional = videoRepository.findById(id);
         VideoEntity videoEntity = videoEntityOptional.orElseThrow(() -> new EntityNotFoundException("Post not found with id " + id));
         String videoPath = videoEntity.getVideoPath();
         ResponseEntity response = minioService.downloadFile(videoPath);
-
         return response;
     }
 
@@ -103,9 +122,11 @@ public class VideoService {
         return videoRepository.findAllByUser(user);
     }
 
-    public void deletePost(long id) {
-        if (videoRepository.existsById(id)) {
-            videoRepository.deleteById(id);
+    public void updateStatusVideo(String uploadURI, String statusType) {
+        List<VideoEntity> findVideo = videoRepository.findByName(uploadURI);
+        for (VideoEntity videoEntity: findVideo) {
+            videoEntity.setStatus(statusType);
+            createVideoMetaData(videoEntity);
         }
     }
 
