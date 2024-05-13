@@ -3,8 +3,10 @@ package main.blog.domain.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -20,7 +22,13 @@ public class UserEntity implements Serializable {
     private String username;
     private String password;
     private String role;
+    private String verification;
+    private String verificationCode;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<PostEntity> postList;
+    @CreatedDate
+    private LocalDateTime verificationAt;
+
+    @CreatedDate
+    private LocalDateTime createdAt;
+
 }

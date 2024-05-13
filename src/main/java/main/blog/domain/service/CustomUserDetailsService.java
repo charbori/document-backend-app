@@ -22,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         UserEntity userData = userRepository.findByUsername(username);
 
         if (userData != null) {
-            UserInfoDTO userInfoDTO = new UserInfoDTO(userData.getUsername(), userData.getRole());
+            UserInfoDTO userInfoDTO = new UserInfoDTO(userData.getId(), userData.getUsername(), userData.getRole());
             return new CustomUserDetails(userInfoDTO);
         }
         return null;

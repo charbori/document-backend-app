@@ -20,11 +20,9 @@ import java.util.ArrayList;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VideoDTO implements Serializable {
-
     private long id;
 
-    // todo userdto로 변경하자
-    private UserEntity user;
+    private UserInfoDTO user;
     @NotBlank
     private String name;
     @NotBlank

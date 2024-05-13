@@ -36,7 +36,10 @@ public class AuthServiceImpl {
         if (!bCryptPasswordEncoder.matches(password, userEntity.getPassword())) {
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
         }
-        UserInfoDTO userInfoDTO = new UserInfoDTO(username, userEntity.getRole());
+        if (!userEntity.getVerification().equals("Y")) {
+            throw new BadCredentialsException("등록하신 이메일에서 계정 인증을 진행해주세요.");
+        }
+        UserInfoDTO userInfoDTO = new UserInfoDTO(userEntity.getId(), userEntity.getUsername(), userEntity.getRole());
         return jwtTokenUtil.createAccessToken(userInfoDTO);
     }
 }

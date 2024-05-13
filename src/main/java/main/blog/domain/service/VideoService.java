@@ -10,6 +10,7 @@ import main.blog.domain.repository.UserRepository;
 import main.blog.domain.repository.VideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -45,6 +46,13 @@ public class VideoService {
         return videosList;
     }
 
+    public VideoEntity getVideo(Long videoId) {
+        Optional<VideoEntity> video = videoRepository.findById(videoId);
+        return video.orElseThrow(() -> {
+            throw new EntityNotFoundException("VideoEntity video() not found");
+        });
+    }
+
     public String registVideo(VideoDTO videoDTO, MultipartFile file, MultipartFile fileImage) {
         VideoEntity videoEntity = new VideoEntity();
         videoEntity.setName(videoDTO.getName());
@@ -56,6 +64,7 @@ public class VideoService {
         videoEntity.setStatus(videoDTO.getStatus());
         videoEntity.setCreatedAt(LocalDateTime.now());
         videoEntity.setStatus(videoDTO.getStatus());
+        videoEntity.setUser(videoDTO.getUser());
 
         this.createVideoMetaData(videoEntity);
 
@@ -106,12 +115,14 @@ public class VideoService {
         videoEntity.setStatus(videoDTO.getStatus());
         videoEntity.setStatus(videoDTO.getStatus());
         videoEntity.setUpdatedAt(LocalDateTime.now());
+        videoEntity.setUser(videoDTO.getUser());
         return videoRepository.save(videoEntity);
     }
 
     public ResponseEntity<?> downloadVideo(Long id) {
         Optional<VideoEntity> videoEntityOptional = videoRepository.findById(id);
-        VideoEntity videoEntity = videoEntityOptional.orElseThrow(() -> new EntityNotFoundException("Post not found with id " + id));
+        VideoEntity videoEntity = videoEntityOptional.orElseThrow(()
+                        -> new EntityNotFoundException("Post not found with id " + id));
         String videoPath = videoEntity.getVideoPath();
         ResponseEntity response = minioService.downloadFile(videoPath);
         return response;
@@ -120,6 +131,11 @@ public class VideoService {
     public List<VideoEntity> getVideoList(String username) {
         UserEntity user = userRepository.findByUsername(username);
         return videoRepository.findAllByUser(user);
+    }
+
+    public List<VideoEntity> getVideoList(String username, Pageable pageable) {
+        UserEntity user = userRepository.findByUsername(username);
+        return videoRepository.findAllByUser(user, pageable);
     }
 
     public void updateStatusVideo(String uploadURI, String statusType) {

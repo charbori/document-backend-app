@@ -10,6 +10,7 @@ import main.blog.domain.entity.UserEntity;
 @Getter
 @Setter
 public class UserInfoDTO extends UserEntity {
+    private long id;
     private String username;
     private String role;
 }
