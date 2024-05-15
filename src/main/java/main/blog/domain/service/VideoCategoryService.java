@@ -1,8 +1,7 @@
 package main.blog.domain.service;
 
-import main.blog.domain.dto.VideoCategoryDTO;
+import main.blog.domain.dto.video.VideoCategoryDTO;
 import main.blog.domain.entity.VideoCategoryEntity;
-import main.blog.domain.repository.UserRepository;
 import main.blog.domain.repository.VideoCategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

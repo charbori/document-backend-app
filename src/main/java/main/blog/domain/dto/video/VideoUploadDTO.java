@@ -1,21 +1,22 @@
-package main.blog.domain.dto;
+package main.blog.domain.dto.video;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.io.Serializable;
-import java.time.LocalDateTime;
+import main.blog.domain.dto.UserInfoDTO;
+import main.blog.domain.entity.VideoEntity;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class VideoCategoryDTO implements Serializable {
+public class VideoUploadDTO {
     private long id;
     @NotBlank
     private String name;
+    private UserInfoDTO user;
     @NotBlank
-    private String role;
+    private String status;
 }

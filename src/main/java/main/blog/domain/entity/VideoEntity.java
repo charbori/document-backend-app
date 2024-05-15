@@ -29,7 +29,9 @@ public class VideoEntity implements Serializable {
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
+    @Column(unique=true)
     private String name;
+
     private String description;
     private String status;
     private String thumbnailPath;

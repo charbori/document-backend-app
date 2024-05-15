@@ -21,10 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,7 +77,7 @@ public class ApiTusVideoController {
         } else {
             if (hashMap.get(uploadURI) == 1) {
                 hashMap.put(uploadURI, 1);
-                videoService.updateStatusVideo(uploadURI, "UPLOADING");
+                //videoService.updateVideoMetaData(uploadURI, "UPLOADING");
                 log.info("upload status UPLOADING");
             }
             hashMap.put(uploadURI, hashMap.get(uploadURI) + 1);
@@ -102,7 +99,7 @@ public class ApiTusVideoController {
                 Files.copy(is, output, StandardCopyOption.REPLACE_EXISTING);
                 long fileSize = Files.size(output.toAbsolutePath());
                 InputStream is2 = tusFileUploadService.getUploadedBytes(uploadURI);
-                videoService.updateStatusVideo(uploadURI, "COMPLETE");
+                //videoService.updateVideoMetaData(uploadURI, "COMPLETE");
                 log.info("upload status COMPLETE");
                 videoService.registTusVideo(is2, uploadInfo.getFileName(), fileSize, contentType);
                 hashMap.remove(uploadURI);
@@ -120,10 +117,10 @@ public class ApiTusVideoController {
     }
 
     @RequestMapping(value = {"", "/**"}, method = {RequestMethod.DELETE})
-    public ResponseEntity<?> deleteFilePreview(final HttpServletRequest servletRequest, final HttpServletResponse servletResponse) throws IOException {
+    public ResponseEntity<?> deleteFilePreview(@RequestBody String videoName, final HttpServletRequest servletRequest) throws IOException {
         String uploadURI = servletRequest.getRequestURI();
         try {
-            videoService.updateStatusVideo(uploadURI, "DELETE");
+            //videoService.deleteVideoMetaData(videoName);
             tusFileUploadService.deleteUpload(uploadURI);
             tusFileUploadService.cleanup();
         } catch (IOException | TusException e) {

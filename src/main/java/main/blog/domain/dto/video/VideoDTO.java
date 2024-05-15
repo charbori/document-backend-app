@@ -1,19 +1,16 @@
-package main.blog.domain.dto;
+package main.blog.domain.dto.video;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import main.blog.domain.entity.UserEntity;
+import main.blog.domain.dto.UserInfoDTO;
+import main.blog.domain.entity.VideoEntity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 @Data
 @Builder
@@ -21,21 +18,33 @@ import java.util.ArrayList;
 @NoArgsConstructor
 public class VideoDTO implements Serializable {
     private long id;
-
     private UserInfoDTO user;
     @NotBlank
     private String name;
-    @NotBlank
     private String description;
     @NotBlank
     private String status;
-    @NotBlank
     private String thumbnailPath;
-    @NotBlank
     private String videoPath;
     private String tag;
     private String videoType;
     private String role;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    public VideoEntity toVideoEntity() {
+        return VideoEntity.builder()
+                .id(id)
+                .name(name)
+                .user(user.toUserEntity())
+                .description(description)
+                .status(status)
+                .thumbnailPath(thumbnailPath)
+                .videoPath(videoPath)
+                .tag(tag)
+                .videoType(videoType)
+                .role(role)
+                .createdAt(createdAt)
+                .updatedAt(updatedAt)
+                .build();
+    }
 }

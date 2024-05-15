@@ -3,23 +3,19 @@ package main.blog.domain.service;
 import io.minio.errors.MinioException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import main.blog.domain.dto.VideoDTO;
+import main.blog.domain.dto.video.VideoDTO;
+import main.blog.domain.dto.video.VideoUploadDTO;
 import main.blog.domain.entity.UserEntity;
 import main.blog.domain.entity.VideoEntity;
 import main.blog.domain.repository.UserRepository;
 import main.blog.domain.repository.VideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.AccessDeniedException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -53,40 +49,58 @@ public class VideoService {
         });
     }
 
-    public String registVideo(VideoDTO videoDTO, MultipartFile file, MultipartFile fileImage) {
-        VideoEntity videoEntity = new VideoEntity();
-        videoEntity.setName(videoDTO.getName());
-        videoEntity.setDescription(videoDTO.getDescription());
-        videoEntity.setTag(videoDTO.getTag());
-        videoEntity.setStatus(videoDTO.getStatus());
-        videoEntity.setVideoPath(videoDTO.getVideoPath());
-        videoEntity.setThumbnailPath(videoDTO.getThumbnailPath());
-        videoEntity.setStatus(videoDTO.getStatus());
+    public VideoEntity createVideoMetaData(VideoDTO videoDTO) {
+        VideoEntity videoEntity = videoDTO.toVideoEntity();
         videoEntity.setCreatedAt(LocalDateTime.now());
-        videoEntity.setStatus(videoDTO.getStatus());
-        videoEntity.setUser(videoDTO.getUser());
-
-        this.createVideoMetaData(videoEntity);
-
-        String response = null;
-        try {
-            response = minioService.uploadFile(file, videoDTO.getVideoPath());
-            response = minioService.uploadFile(fileImage, videoDTO.getThumbnailPath());
-        } catch (MinioException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InvalidKeyException e) {
-            throw new RuntimeException(e);
-        }
-
-        return response;
+        videoEntity.setUpdatedAt(LocalDateTime.now());
+        return videoRepository.save(videoEntity);
     }
 
-    public VideoEntity createVideoMetaData(VideoEntity videoEntity) {
+    public VideoEntity updateVideoMetaData(VideoDTO videoDTO) {
+        List<VideoEntity> findVideo = videoRepository.findByNameAndUser(videoDTO.getName(), videoDTO.getUser().toUserEntity());
+        if (findVideo.size() == 0) {
+            throw new EntityNotFoundException("업데이트할 비디오 메타데이터가 없습니다.");
+        } else if (findVideo.size() > 1) {
+            log.error("updateContentUpload() 중복된 비디오 메타데이터 ERROR {}", videoDTO);
+        }
+
+        VideoEntity videoEntity = videoDTO.toVideoEntity();
+        videoEntity.setId(findVideo.get(0).getId());
+        videoEntity.setName(findVideo.get(0).getName());
+        videoEntity.setUpdatedAt(LocalDateTime.now());
+
         return videoRepository.save(videoEntity);
+    }
+
+    public VideoEntity updateVideoMetaDataStatus(VideoUploadDTO videoUploadDTO) {
+        List<VideoEntity> findVideo = videoRepository.findByNameAndUser(videoUploadDTO.getName(), videoUploadDTO.getUser().toUserEntity());
+        if (findVideo.size() == 0) {
+            throw new EntityNotFoundException("업데이트할 비디오 메타데이터가 없습니다.");
+        } else if (findVideo.size() > 1) {
+            log.error("updateContentUpload() 중복된 비디오 메타데이터 ERROR {}", videoUploadDTO);
+        }
+
+        VideoEntity videoEntity = findVideo.get(0);
+        videoEntity.setStatus(videoEntity.getStatus());
+        videoEntity.setUpdatedAt(LocalDateTime.now());
+
+        return videoRepository.save(videoEntity);
+    }
+
+    public void deleteVideoMetaData(String videoName) {
+        List<VideoEntity> findVideo = videoRepository.findByName(videoName);
+        long videoId = 0L;
+
+        if (findVideo.size() == 0) {
+            throw new EntityNotFoundException("업데이트할 비디오 메타데이터가 없습니다.");
+        } else if (findVideo.size() > 1) {
+            log.error("updateContentUpload() 중복된 비디오 메타데이터 ERROR {}", videoName);
+        }
+        for (VideoEntity video: findVideo) {
+            videoId = video.getId();
+        }
+
+        videoRepository.deleteById(videoId);
     }
 
     public String registTusVideo(InputStream io, String filename, long filesize, String contentTypeName) {
@@ -103,20 +117,6 @@ public class VideoService {
             throw new RuntimeException(e);
         }
         return response;
-    }
-
-    public VideoEntity updateVideo(long id, @Validated VideoDTO videoDTO) throws AccessDeniedException {
-        VideoEntity videoEntity = new VideoEntity();
-        videoEntity.setName(videoDTO.getName());
-        videoEntity.setDescription(videoDTO.getDescription());
-        videoEntity.setTag(videoDTO.getTag());
-        videoEntity.setStatus(videoDTO.getStatus());
-        videoEntity.setThumbnailPath(videoDTO.getThumbnailPath());
-        videoEntity.setStatus(videoDTO.getStatus());
-        videoEntity.setStatus(videoDTO.getStatus());
-        videoEntity.setUpdatedAt(LocalDateTime.now());
-        videoEntity.setUser(videoDTO.getUser());
-        return videoRepository.save(videoEntity);
     }
 
     public ResponseEntity<?> downloadVideo(Long id) {
@@ -136,14 +136,6 @@ public class VideoService {
     public List<VideoEntity> getVideoList(String username, Pageable pageable) {
         UserEntity user = userRepository.findByUsername(username);
         return videoRepository.findAllByUser(user, pageable);
-    }
-
-    public void updateStatusVideo(String uploadURI, String statusType) {
-        List<VideoEntity> findVideo = videoRepository.findByName(uploadURI);
-        for (VideoEntity videoEntity: findVideo) {
-            videoEntity.setStatus(statusType);
-            createVideoMetaData(videoEntity);
-        }
     }
 
 }

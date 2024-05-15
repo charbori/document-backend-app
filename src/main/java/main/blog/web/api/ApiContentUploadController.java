@@ -1,25 +1,27 @@
 package main.blog.web.api;
 
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import main.blog.domain.dto.VideoDTO;
-import main.blog.domain.entity.VideoEntity;
+import main.blog.domain.dto.CustomUserDetails;
+import main.blog.domain.dto.video.VideoDTO;
+import main.blog.domain.dto.video.VideoUploadDTO;
 import main.blog.domain.repository.VideoRepository;
 import main.blog.domain.service.VideoService;
 import main.blog.util.ApiResponse;
 import main.blog.util.ApiResponseMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/content/metadata")
-//access Cros
 @Slf4j
 @CrossOrigin(origins = "*")
 public class ApiContentUploadController {
@@ -31,45 +33,41 @@ public class ApiContentUploadController {
     private VideoRepository videoRepository;
 
     @RequestMapping(value = {"", "/**"}, method = {RequestMethod.POST})
-    public ResponseEntity<?> contentUpload(@RequestBody VideoDTO videoDTO, final HttpServletResponse servletResponse) throws IOException {
+    public ResponseEntity<?> contentUpload(@RequestBody @Valid VideoDTO videoDTO, final HttpServletResponse servletResponse) throws IOException {
         log.info("content create metadata={}",videoDTO);
-        VideoEntity videoEntity = new VideoEntity();
-        videoEntity.setName(videoDTO.getName());
-        videoEntity.setDescription("");
-        videoEntity.setTag("1.0");
-        videoEntity.setStatus(videoDTO.getStatus());
-        videoEntity.setVideoPath("");
-        videoEntity.setVideoType(videoDTO.getVideoType());
-        videoEntity.setRole(videoDTO.getRole());
-        videoEntity.setThumbnailPath("");
-
-        return ApiResponse.success(new ApiResponseMessage(videoService.createVideoMetaData(videoEntity), ""));
+        CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
+        videoDTO.setUser(customUserDetails.getUserInfoDTO());
+        return ApiResponse.success(new ApiResponseMessage(videoService.createVideoMetaData(videoDTO), ""));
     }
 
     @RequestMapping(value = {"", "/**"}, method = {RequestMethod.PATCH})
-    public ResponseEntity<?> updateContentUpload(@RequestBody VideoDTO videoDTO, final HttpServletResponse servletResponse) throws IOException {
+    public ResponseEntity<?> updateVideo(@RequestBody @Valid VideoDTO videoDTO, final HttpServletResponse servletResponse) throws IOException {
         log.info("content update metadata={}",videoDTO);
-        VideoEntity videoEntity = new VideoEntity();
-        videoEntity.setName(videoDTO.getName());
-        videoEntity.setDescription("");
-        videoEntity.setTag("1.0");
-        videoEntity.setStatus(videoDTO.getStatus());
-        videoEntity.setVideoPath("");
-        videoEntity.setVideoType(videoDTO.getVideoType());
-        videoEntity.setRole(videoDTO.getRole());
-        videoEntity.setThumbnailPath("");
+        CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
+        videoDTO.setUser(customUserDetails.getUserInfoDTO());
 
-        List<VideoEntity> findVideo = videoRepository.findByName(videoDTO.getName());
+        return ApiResponse.success(new ApiResponseMessage(videoService.updateVideoMetaData(videoDTO), ""));
+    }
 
-        for (VideoEntity video: findVideo) {
-            videoEntity.setId(video.getId());
-            if (video.getStatus().equals("COMPLETE")) {
+    @RequestMapping(value = {"/status"}, method = {RequestMethod.PATCH})
+    public ResponseEntity<?> updateVideoUploadStatus(@RequestBody @Valid VideoUploadDTO videoUploadDTO, final HttpServletResponse servletResponse) throws IOException {
+        log.info("content update videoUploadDTO data={}",videoUploadDTO);
+        CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
+        videoUploadDTO.setUser(customUserDetails.getUserInfoDTO());
 
-            }
-            videoService.createVideoMetaData(videoEntity);
+        return ApiResponse.success(new ApiResponseMessage(videoService.updateVideoMetaDataStatus(videoUploadDTO), ""));
+    }
+
+    private static CustomUserDetails getAuthenticatedUserDetail() {
+        Authentication authentication
+                = SecurityContextHolder.getContext().getAuthentication();
+        if (!authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            log.info("get user authentication fail {} ", authentication);
+            throw new BadCredentialsException("로그인을 해주세요.");
         }
-
-        return ApiResponse.success(new ApiResponseMessage(videoService.createVideoMetaData(videoEntity), ""));
+        log.info("get user credential :{} {}", authentication.getPrincipal(), authentication.getPrincipal().equals("anonymousUser"));
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+        return customUserDetails;
     }
 
 }

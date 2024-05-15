@@ -28,5 +28,7 @@ public interface VideoRepository  extends JpaRepository<VideoEntity, Long> {
 
     List<VideoEntity> findByName(String name, Pageable pageable);
 
+    List<VideoEntity> findByNameAndUser(String name, UserEntity user);
+
     Optional<VideoEntity> findById(long id);
 }
