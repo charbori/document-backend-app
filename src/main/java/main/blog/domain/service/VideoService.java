@@ -51,6 +51,15 @@ public class VideoService {
         });
     }
 
+    public void deleteVideo(Long videoId) throws MinioException, NoSuchAlgorithmException, IOException, InvalidKeyException {
+        Optional<VideoEntity> findVideo = videoRepository.findById(videoId);
+        VideoEntity videoEntity = findVideo.orElseThrow(()->
+                new EntityNotFoundException("업데이트할 비디오 메타데이터가 없습니다."));
+
+        minioService.deleteTusFile(videoEntity.getName());
+        videoRepository.deleteById(videoId);
+    }
+
     public VideoEntity createVideoMetaData(VideoDTO videoDTO) {
         VideoEntity videoEntity = videoDTO.toVideoEntity();
         videoEntity.setCreatedAt(LocalDateTime.now());
@@ -104,7 +113,7 @@ public class VideoService {
         return videoRepository.save(videoEntity);
     }
 
-    public void deleteVideoMetaData(String videoName, UserInfoDTO userInfoDTO) {
+    public void deleteVideoMetaData(String videoName, UserInfoDTO userInfoDTO) throws MinioException, NoSuchAlgorithmException, IOException, InvalidKeyException {
         List<VideoEntity> findVideo = videoRepository.findByNameAndUser(videoName, userInfoDTO.toUserEntity());
         long videoId = 0L;
 
@@ -116,7 +125,7 @@ public class VideoService {
         for (VideoEntity video: findVideo) {
             videoId = video.getId();
         }
-
+        minioService.deleteTusFile(videoName);
         videoRepository.deleteById(videoId);
     }
 

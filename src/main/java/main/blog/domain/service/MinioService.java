@@ -3,13 +3,18 @@ package main.blog.domain.service;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import io.minio.errors.*;
 import jakarta.annotation.PostConstruct;
+import main.blog.domain.dto.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,9 +50,10 @@ public class MinioService {
     }
 
     public String uploadFile(MultipartFile file, String filename) throws MinioException, NoSuchAlgorithmException, IOException, InvalidKeyException {
+        String uploadFilename = getFileName(filename);
         try {
             minioClient.putObject(
-                    PutObjectArgs.builder().bucket(bucketName).object(filename).stream(
+                    PutObjectArgs.builder().bucket(bucketName).object(uploadFilename).stream(
                                     file.getInputStream(), file.getSize(), -1)
                             .contentType(file.getContentType())
                             .build());
@@ -64,9 +70,10 @@ public class MinioService {
     }
 
     public String uploadTusFile(InputStream fileIo, String filename, long fileSize, String contentType) throws MinioException, NoSuchAlgorithmException, IOException, InvalidKeyException {
+        String uploadFilename = getFileName(filename);
         try {
             minioClient.putObject(
-                    PutObjectArgs.builder().bucket(bucketName).object(filename).stream(
+                    PutObjectArgs.builder().bucket(bucketName).object(uploadFilename).stream(
                                     fileIo, fileSize, -1)
                             .contentType(contentType)
                             .build());
@@ -82,10 +89,29 @@ public class MinioService {
         }
     }
 
+    public boolean deleteTusFile( String filename) throws MinioException, NoSuchAlgorithmException, IOException, InvalidKeyException {
+        String uploadFilename = getFileName(filename);
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder().bucket(bucketName).object(uploadFilename)
+                            .build());
+            return true;
+        } catch (MinioException e) {
+            throw new MinioException(e.getMessage());
+        } catch (NoSuchAlgorithmException e) {
+            throw new NoSuchAlgorithmException(e);
+        } catch (InvalidKeyException e) {
+            throw new InvalidKeyException(e);
+        } catch (IOException e) {
+            throw new IOException(e);
+        }
+    }
+
     public ResponseEntity<InputStreamResource> downloadFile(String filename) {
+        String uploadFilename = getFileName(filename);
         try {
             InputStreamResource resource = new InputStreamResource(minioClient.getObject(
-                    GetObjectArgs.builder().bucket(bucketName).object(filename).build()));
+                    GetObjectArgs.builder().bucket(bucketName).object(uploadFilename).build()));
 
             HttpHeaders headers = new HttpHeaders();
             headers.add("Content-Disposition", String.format("attachment; filename=\"%s\"", filename));
@@ -115,5 +141,22 @@ public class MinioService {
         } catch (InternalException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String getFileName(String filename) {
+        CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
+        String[] username = customUserDetails.getUsername().split("@");
+
+        return username[0] + "/" + filename;
+    }
+
+    private static CustomUserDetails getAuthenticatedUserDetail() {
+        Authentication authentication
+                = SecurityContextHolder.getContext().getAuthentication();
+        if (!authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            throw new BadCredentialsException("로그인을 해주세요.");
+        }
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+        return customUserDetails;
     }
 }

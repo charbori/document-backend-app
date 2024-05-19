@@ -1,10 +1,14 @@
 package main.blog.web.api;
 
+import io.minio.errors.MinioException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import main.blog.domain.dto.CustomUserDetails;
 import main.blog.domain.dto.UserInfoDTO;
 import main.blog.domain.dto.video.VideoDTO;
+import main.blog.domain.dto.video.VideoUploadDTO;
 import main.blog.domain.entity.VideoEntity;
 import main.blog.domain.service.VideoCategoryService;
 import main.blog.domain.service.VideoService;
@@ -20,7 +24,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,10 +44,10 @@ public class ApiVideoController {
 
     @GetMapping("/video/{id}")
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<?> getVideo(@PathVariable(value="id") Long video_id) {
+    public ResponseEntity<?> getVideo(@PathVariable(value="id") Long videoId) {
         CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
 
-        VideoEntity video = videoService.getVideo(customUserDetails.getUserInfoDTO().getId());
+        VideoEntity video = videoService.getVideo(videoId);
         VideoDTO videoDTO = new VideoDTO(video.getId(),
                 new UserInfoDTO(customUserDetails.getUserInfoDTO().getId(), customUserDetails.getUserInfoDTO().getUsername(), customUserDetails.getUserInfoDTO().getRole()),
                 video.getName(),
@@ -101,6 +108,40 @@ public class ApiVideoController {
                 ))
                 .collect(Collectors.toList());
         return ApiResponse.success(videoDTOList);
+    }
+
+    @RequestMapping(value = {"", "/**"}, method = {RequestMethod.POST})
+    public ResponseEntity<?> contentUpload(@RequestBody @Valid VideoDTO videoDTO, final HttpServletResponse servletResponse) throws IOException {
+        log.info("content create metadata={}",videoDTO);
+        CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
+        videoDTO.setUser(customUserDetails.getUserInfoDTO());
+        return ApiResponse.success(new ApiResponseMessage(videoService.createVideoMetaData(videoDTO), ""));
+    }
+
+    @RequestMapping(value = {"", "/**"}, method = {RequestMethod.PATCH})
+    public ResponseEntity<?> updateVideo(@RequestBody @Valid VideoDTO videoDTO, final HttpServletResponse servletResponse) throws IOException {
+        log.info("content update metadata={}",videoDTO);
+        CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
+        videoDTO.setUser(customUserDetails.getUserInfoDTO());
+
+        return ApiResponse.success(new ApiResponseMessage(videoService.updateVideoMetaData(videoDTO), ""));
+    }
+
+    @DeleteMapping("/video/{id}")
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    public ResponseEntity<?> deleteVideo(@PathVariable(value="id") Long videoId) throws MinioException, NoSuchAlgorithmException, IOException, InvalidKeyException {
+        CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
+        videoService.deleteVideo(videoId);
+        return ApiResponse.success(videoId);
+    }
+
+    @RequestMapping(value = {"/status"}, method = {RequestMethod.PATCH})
+    public ResponseEntity<?> updateVideoUploadStatus(@RequestBody @Valid VideoUploadDTO videoUploadDTO, final HttpServletResponse servletResponse) throws IOException {
+        log.info("content update videoUploadDTO data={}",videoUploadDTO);
+        CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
+        videoUploadDTO.setUser(customUserDetails.getUserInfoDTO());
+
+        return ApiResponse.success(new ApiResponseMessage(videoService.updateVideoMetaDataStatus(videoUploadDTO), ""));
     }
 
     @GetMapping("/video/category")

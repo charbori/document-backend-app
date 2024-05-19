@@ -1,5 +1,6 @@
 package main.blog.domain.service;
 
+import io.minio.errors.MinioException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -104,6 +107,12 @@ public class VideoTusUploadService {
             tusFileUploadService.cleanup();
         } catch (IOException | TusException e) {
             throw new IOException("DELETE FAIL:" + uploadURI);
+        } catch (MinioException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException(e);
         }
     }
 
