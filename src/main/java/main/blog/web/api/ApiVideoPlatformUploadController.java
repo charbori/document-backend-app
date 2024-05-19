@@ -6,7 +6,6 @@ import main.blog.util.YoutubeChannelDownload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -14,7 +13,7 @@ import java.security.GeneralSecurityException;
 @Slf4j
 @RestController
 @RequestMapping("/api/upload")
-public class ApiVideoUploadController {
+public class ApiVideoPlatformUploadController {
 
     @Autowired
     private VideoService videoService;

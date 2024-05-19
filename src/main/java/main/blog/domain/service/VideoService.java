@@ -2,7 +2,9 @@ package main.blog.domain.service;
 
 import io.minio.errors.MinioException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
+import main.blog.domain.dto.UserInfoDTO;
 import main.blog.domain.dto.video.VideoDTO;
 import main.blog.domain.dto.video.VideoUploadDTO;
 import main.blog.domain.entity.UserEntity;
@@ -87,8 +89,23 @@ public class VideoService {
         return videoRepository.save(videoEntity);
     }
 
-    public void deleteVideoMetaData(String videoName) {
-        List<VideoEntity> findVideo = videoRepository.findByName(videoName);
+    public VideoEntity updateVideoUploadStatus(@NotBlank String videoName, UserInfoDTO userInfoDTO, String status) {
+        List<VideoEntity> findVideo = videoRepository.findByNameAndUser(videoName, userInfoDTO.toUserEntity());
+        if (findVideo.size() == 0) {
+            throw new EntityNotFoundException("업데이트할 비디오 메타데이터가 없습니다.");
+        } else if (findVideo.size() > 1) {
+            log.error("updateContentUpload() 중복된 비디오 메타데이터 ERROR {}", videoName);
+        }
+
+        VideoEntity videoEntity = findVideo.get(0);
+        videoEntity.setStatus(status);
+        videoEntity.setUpdatedAt(LocalDateTime.now());
+
+        return videoRepository.save(videoEntity);
+    }
+
+    public void deleteVideoMetaData(String videoName, UserInfoDTO userInfoDTO) {
+        List<VideoEntity> findVideo = videoRepository.findByNameAndUser(videoName, userInfoDTO.toUserEntity());
         long videoId = 0L;
 
         if (findVideo.size() == 0) {
