@@ -110,6 +110,19 @@ public class ApiVideoController {
         return ApiResponse.success(videoDTOList);
     }
 
+    @GetMapping("/video/validation/{videoname}")
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    public ResponseEntity<?> isExistVideo(@PathVariable(value="videoname") String videoName) {
+        CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
+        log.info("isExistVideo : " + videoName);
+        try {
+            VideoEntity video = videoService.getVideoByVideoname(videoName, customUserDetails.getUserInfoDTO());
+        } catch (EntityNotFoundException e) {
+            return ApiResponse.success(new ApiResponseMessage(false, ""));
+        }
+        return ApiResponse.success(new ApiResponseMessage(true, ""));
+    }
+
     @RequestMapping(value = {"", "/**"}, method = {RequestMethod.POST})
     public ResponseEntity<?> contentUpload(@RequestBody @Valid VideoDTO videoDTO, final HttpServletResponse servletResponse) throws IOException {
         log.info("content create metadata={}",videoDTO);

@@ -36,9 +36,11 @@ public class SecurityConfig {
         http.csrf((auth) -> auth.disable());
         http.cors(cors -> cors.configurationSource(request -> {
             CorsConfiguration configuration = new CorsConfiguration();
-            configuration.setAllowedOrigins(Arrays.asList("*"));
+            configuration.setAllowCredentials(true);
+            configuration.setAllowedOriginPatterns(Arrays.asList("*"));
             configuration.setAllowedMethods(Arrays.asList("*"));
             configuration.setAllowedHeaders(Arrays.asList("*"));
+            configuration.setExposedHeaders(Arrays.asList("*"));
             return configuration;
         }));
 
@@ -47,8 +49,8 @@ public class SecurityConfig {
                 .sessionFixation().changeSessionId()
         );
 
-        // /api 도메인 체크
-        //http.addFilterBefore(new ApiAuthFilter(), UsernamePasswordAuthenticationFilter.class);
+        // api 도메인 체크
+        // http.addFilterBefore(new ApiAuthFilter(), UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(new JwtAuthFilter(customUserDetailsService, jwtTokenUtil), UsernamePasswordAuthenticationFilter.class);
 
         http.exceptionHandling((execptionHandlling) -> execptionHandlling
@@ -63,7 +65,6 @@ public class SecurityConfig {
                 .requestMatchers("/Callback").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/info/terms", "/info/privacy").permitAll()
-
                 .requestMatchers("/post/regist", "/post/*/edit").hasAnyRole("ADMIN", "SUPER_ADMIN", "USER")
                 .requestMatchers("/", "/images/**","/icon/**", "/css/**", "/js/**", "/post/*", "/error", "/404").permitAll()
                 .requestMatchers("/join", "/login","/loginAction", "joinAction").permitAll()

@@ -51,6 +51,17 @@ public class VideoService {
         });
     }
 
+    public VideoEntity getVideoByVideoname(String videoname, UserEntity userEntity) {
+        List<VideoEntity> findVideo = videoRepository.findByNameAndUser(videoname, userEntity);
+        if (findVideo.size() == 0) {
+            log.info("videon : " + videoname);
+            throw new EntityNotFoundException("비디오 메타데이터가 없습니다.");
+        } else {
+            log.info("videon get!! : " + videoname);
+            return findVideo.get(0);
+        }
+    }
+
     public void deleteVideo(Long videoId) throws MinioException, NoSuchAlgorithmException, IOException, InvalidKeyException {
         Optional<VideoEntity> findVideo = videoRepository.findById(videoId);
         VideoEntity videoEntity = findVideo.orElseThrow(()->

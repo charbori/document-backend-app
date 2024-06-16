@@ -15,7 +15,7 @@ import java.util.Locale;
 @Controller
 public class TermsPolicyController {
     @Autowired
-    private MessageSource messageSource;
+    MessageSource messageSource;
 
     @GetMapping("/info/terms")
     public String getMethodName(Locale locale, Model model) {
@@ -24,7 +24,7 @@ public class TermsPolicyController {
         if (!locale.getLanguage().equals("ko")) {
             locale = new Locale("en");
         }
-        log.info("locale info={}", locale);
+
         model.addAttribute("title", messageSource.getMessage("info.terms.title", null, locale));
         model.addAttribute("purpose", messageSource.getMessage("info.terms.purpose", null, locale));
         model.addAttribute("definition", messageSource.getMessage("info.terms.definition", null, locale));
