@@ -115,12 +115,14 @@ public class ApiVideoController {
     public ResponseEntity<?> isExistVideo(@PathVariable(value="videoname") String videoName) {
         CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
         log.info("isExistVideo : " + videoName);
+
         try {
-            VideoEntity video = videoService.getVideoByVideoname(videoName, customUserDetails.getUserInfoDTO());
+            VideoEntity video = videoService.getVideoByVideoname(videoName, customUserDetails.getUserInfoDTO().toUserEntity());
+            videoName = video.getName();
         } catch (EntityNotFoundException e) {
-            return ApiResponse.success(new ApiResponseMessage(false, ""));
+            return ApiResponse.success(new ApiResponseMessage("", ""));
         }
-        return ApiResponse.success(new ApiResponseMessage(true, ""));
+        return ApiResponse.success(new ApiResponseMessage(videoName, ""));
     }
 
     @RequestMapping(value = {"", "/**"}, method = {RequestMethod.POST})

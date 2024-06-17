@@ -1,9 +1,6 @@
 package main.blog.domain.service;
 
-import io.minio.GetObjectArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.RemoveObjectArgs;
+import io.minio.*;
 import io.minio.errors.*;
 import jakarta.annotation.PostConstruct;
 import main.blog.domain.dto.CustomUserDetails;
@@ -104,6 +101,34 @@ public class MinioService {
             throw new InvalidKeyException(e);
         } catch (IOException e) {
             throw new IOException(e);
+        }
+    }
+
+    public boolean findFile(String filename) {
+        try {
+            String uploadFilename = getFileName(filename);
+            StatObjectResponse objectStat = minioClient.statObject(
+                            StatObjectArgs.builder().bucket(bucketName).object(uploadFilename)
+                                    .build());
+            return true;
+        } catch (ServerException e) {
+            throw new RuntimeException(e);
+        } catch (InsufficientDataException e) {
+            throw new RuntimeException(e);
+        } catch (ErrorResponseException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidResponseException e) {
+            throw new RuntimeException(e);
+        } catch (XmlParserException e) {
+            throw new RuntimeException(e);
+        } catch (InternalException e) {
+            throw new RuntimeException(e);
         }
     }
 

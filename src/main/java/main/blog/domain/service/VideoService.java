@@ -1,5 +1,6 @@
 package main.blog.domain.service;
 
+import io.micrometer.common.util.StringUtils;
 import io.minio.errors.MinioException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotBlank;
@@ -16,13 +17,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -52,13 +58,33 @@ public class VideoService {
     }
 
     public VideoEntity getVideoByVideoname(String videoname, UserEntity userEntity) {
-        List<VideoEntity> findVideo = videoRepository.findByNameAndUser(videoname, userEntity);
-        if (findVideo.size() == 0) {
-            log.info("videon : " + videoname);
+        try {
+            List<VideoEntity> findVideo = videoRepository.findByNameAndUser(videoname, userEntity);
+            if (findVideo.size() == 0) {
+                log.info("videon : " + videoname);
+                throw new EntityNotFoundException("비디오 메타데이터가 없습니다.");
+            } else {
+                VideoEntity m = findVideo.get(0);
+                log.info("videon get!! : " + videoname);
+                VideoDTO videoDTO = new VideoDTO(m.getId(), new UserInfoDTO(m.getUser().getId(),
+                        m.getUser().getUsername(), m.getUser().getRole()),
+                        m.getName(),
+                        m.getDescription(),
+                        m.getStatus(),
+                        m.getThumbnailPath(),
+                        m.getVideoPath(),
+                        m.getTag(),
+                        m.getVideoType(),
+                        m.getRole(),
+                        m.getCreatedAt(),
+                        m.getUpdatedAt()
+                );
+                m.setName(getNewFileName(videoDTO));
+                return m;
+            }
+        } catch (Exception e) {
+            log.info("getvideo by videoname error :"  + e.getMessage());
             throw new EntityNotFoundException("비디오 메타데이터가 없습니다.");
-        } else {
-            log.info("videon get!! : " + videoname);
-            return findVideo.get(0);
         }
     }
 
@@ -75,7 +101,49 @@ public class VideoService {
         VideoEntity videoEntity = videoDTO.toVideoEntity();
         videoEntity.setCreatedAt(LocalDateTime.now());
         videoEntity.setUpdatedAt(LocalDateTime.now());
-        return videoRepository.save(videoEntity);
+        try {
+            VideoEntity entity = videoRepository.save(videoEntity);
+
+            return entity;
+        } catch (Exception e) {
+            String videonameNewname = getNewFileName(videoDTO);
+            videoEntity.setName(videonameNewname);
+            VideoEntity entity = videoRepository.save(videoEntity);
+            return entity;
+        }
+    }
+
+    public String getNewFileName(VideoDTO videoDTO) {
+        List<VideoEntity> findVideo = videoRepository.findByNameAndUser(videoDTO.getName(), videoDTO.getUser().toUserEntity());
+
+        log.info("######## dest :" + findVideo.size());
+        if (findVideo.size() == 0) return videoDTO.getName();
+        String filename = findVideo.get(0).getName();
+        String dot = ".";
+        String dest = filename;
+        try {
+            String fileHead = filename;
+            String fileExt = "";
+
+            int pos = filename.lastIndexOf(dot);
+            if (pos > -1) {
+                fileHead = filename.substring(0,filename.lastIndexOf("."));
+                fileExt = filename.substring(filename.lastIndexOf(".")+1);
+            } else {
+                dot = "";
+            }
+
+            for (int i = 1; i < Integer.MAX_VALUE; i++) {
+                dest = String.format("%s(%d)%s%s", fileHead, i, dot, fileExt);
+                log.info("######## dest :" + dest);
+                findVideo = videoRepository.findByNameAndUser(dest, videoDTO.getUser().toUserEntity());
+                if (findVideo.size() == 0) break;
+            }
+        } catch(Exception ie) {
+            log.info("error : " + ie.toString() + " dest :" + dest);
+        }
+
+        return dest;
     }
 
     public VideoEntity updateVideoMetaData(VideoDTO videoDTO) {
