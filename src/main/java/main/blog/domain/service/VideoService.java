@@ -6,6 +6,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import main.blog.domain.dto.UserInfoDTO;
+import main.blog.domain.dto.VideoListDTO;
 import main.blog.domain.dto.video.VideoDTO;
 import main.blog.domain.dto.video.VideoUploadDTO;
 import main.blog.domain.entity.UserEntity;
@@ -14,6 +15,7 @@ import main.blog.domain.repository.UserRepository;
 import main.blog.domain.repository.VideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,8 @@ import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -241,6 +245,38 @@ public class VideoService {
     public List<VideoEntity> getVideoList(String username, Pageable pageable) {
         UserEntity user = userRepository.findByUsername(username);
         return videoRepository.findAllByUser(user, pageable);
+    }
+
+    public List<VideoEntity> getVideoList(String username, VideoListDTO videoListDTO, Pageable pageable) {
+        if (videoListDTO.getName_like() != null) {
+            UserEntity user = userRepository.findByUsername(username);
+            return videoRepository.findAllByUserAndNameContaining(user, videoListDTO.getName_like(), pageable);
+        } else if (videoListDTO.getDescription_like() != null) {
+            UserEntity user = userRepository.findByUsername(username);
+            return videoRepository.findAllByUserAndDescriptionContaining(user, videoListDTO.getDescription_like(), pageable);
+        } else if (videoListDTO.getId() != null) {
+            UserEntity user = userRepository.findByUsername(username);
+            return videoRepository.findAllByUserAndId(user, Long.parseLong(videoListDTO.getId()), pageable);
+        } else if (videoListDTO.getName() != null) {
+            UserEntity user = userRepository.findByUsername(username);
+            return videoRepository.findAllByUserAndName(user, videoListDTO.getName(), pageable);
+        } else if (videoListDTO.getDescription() != null) {
+            UserEntity user = userRepository.findByUsername(username);
+            return videoRepository.findAllByUserAndDescription(user, videoListDTO.getDescription(), pageable);
+        } else if (videoListDTO.getCreatedAt() != null) {
+            String createdAtDate = videoListDTO.getCreatedAt() + " 00:00:00";
+            String createdAtDateEnd = videoListDTO.getCreatedAt() + " 23:59:59";
+            DateTimeFormatterBuilder fmb = new DateTimeFormatterBuilder();
+            fmb.parseCaseInsensitive();
+            fmb.append(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            LocalDateTime createdAt = LocalDateTime.parse(createdAtDate, fmb.toFormatter());
+            LocalDateTime createdAtEnd = LocalDateTime.parse(createdAtDateEnd, fmb.toFormatter());
+            UserEntity user = userRepository.findByUsername(username);
+            return videoRepository.findAllByUserAndCreatedAtBetween(user, createdAt, createdAtEnd, pageable);
+        } else {
+            UserEntity user = userRepository.findByUsername(username);
+            return videoRepository.findAllByUser(user, pageable);
+        }
     }
 
 }

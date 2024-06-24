@@ -14,10 +14,8 @@ import lombok.NoArgsConstructor;
 public class VideoCategoryEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "")
     private long id;
 
     private String name;
-
     private String role;
 }

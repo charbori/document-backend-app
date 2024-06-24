@@ -40,6 +40,10 @@ public class VideoEntity implements Serializable {
     private String videoType;
     private String role;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private VideoCategoryEntity category;
+
     @CreatedDate
     private LocalDateTime createdAt;
     @LastModifiedDate

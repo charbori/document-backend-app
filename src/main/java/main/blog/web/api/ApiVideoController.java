@@ -2,11 +2,13 @@ package main.blog.web.api;
 
 import io.minio.errors.MinioException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import main.blog.domain.dto.CustomUserDetails;
 import main.blog.domain.dto.UserInfoDTO;
+import main.blog.domain.dto.VideoListDTO;
 import main.blog.domain.dto.video.VideoDTO;
 import main.blog.domain.dto.video.VideoUploadDTO;
 import main.blog.domain.entity.VideoEntity;
@@ -17,6 +19,7 @@ import main.blog.util.ApiResponseMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -77,22 +80,25 @@ public class ApiVideoController {
 
     @GetMapping("/video")
     @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<?> getVideoList(@RequestParam(value="_start") int limit_start,
-                                          @RequestParam(value="_end") int limit_end) {
+    public ResponseEntity<?> getVideoList(VideoListDTO videoListDTO) {
         CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
-
-        int offset = limit_start > 0 ? limit_start : 0;
+        int offset = videoListDTO.get_start() > 0 ? videoListDTO.get_start() : 0;
         int pageSize = 100;
-        if (limit_end > limit_start) {
-            offset = (limit_start) / pageSize;
-            pageSize = limit_end - limit_start;
+        if (videoListDTO.get_end() > videoListDTO.get_start()) {
+            offset = (videoListDTO.get_start()) / pageSize;
+            pageSize = videoListDTO.get_end() - videoListDTO.get_start();
         }
-        Pageable paging = PageRequest.of(offset, pageSize);
-        log.info("video list limit_start limit_end {} {}", limit_start, limit_end);
-        log.info("video list size {} {}", offset, pageSize);
+        if (videoListDTO.get_sort().equals("")) {
+            videoListDTO.set_sort("id");
+        }
+        if (videoListDTO.get_order().equals("")) {
+            videoListDTO.set_order("desc");
+        }
+        Sort sortData = Sort.by(videoListDTO.get_order().equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, videoListDTO.get_sort());
+        Pageable paging = PageRequest.of(offset, pageSize, sortData);
 
-        List<VideoEntity> videoList = videoService.getVideoList(customUserDetails.getUsername(), paging);
-        List<VideoDTO> videoDTOList = videoList.stream()
+        List<VideoEntity> videoList = videoService.getVideoList(customUserDetails.getUsername(), videoListDTO, paging);
+        List<VideoDTO> videoListData = videoList.stream()
                 .map(m-> new VideoDTO(m.getId(), new UserInfoDTO(m.getUser().getId(),
                         m.getUser().getUsername(), m.getUser().getRole()),
                         m.getName(),
@@ -107,7 +113,7 @@ public class ApiVideoController {
                         m.getUpdatedAt()
                 ))
                 .collect(Collectors.toList());
-        return ApiResponse.success(videoDTOList);
+        return ApiResponse.success(videoListData);
     }
 
     @GetMapping("/video/validation/{videoname}")
