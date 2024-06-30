@@ -65,11 +65,9 @@ public class VideoService {
         try {
             List<VideoEntity> findVideo = videoRepository.findByNameAndUser(videoname, userEntity);
             if (findVideo.size() == 0) {
-                log.info("videon : " + videoname);
                 throw new EntityNotFoundException("비디오 메타데이터가 없습니다.");
             } else {
                 VideoEntity m = findVideo.get(0);
-                log.info("videon get!! : " + videoname);
                 VideoDTO videoDTO = new VideoDTO(m.getId(), new UserInfoDTO(m.getUser().getId(),
                         m.getUser().getUsername(), m.getUser().getRole()),
                         m.getName(),
@@ -87,7 +85,7 @@ public class VideoService {
                 return m;
             }
         } catch (Exception e) {
-            log.info("getvideo by videoname error :"  + e.getMessage());
+            log.error("getvideo by videoname error :"  + e.getMessage());
             throw new EntityNotFoundException("비디오 메타데이터가 없습니다.");
         }
     }
@@ -120,7 +118,6 @@ public class VideoService {
     public String getNewFileName(VideoDTO videoDTO) {
         List<VideoEntity> findVideo = videoRepository.findByNameAndUser(videoDTO.getName(), videoDTO.getUser().toUserEntity());
 
-        log.info("######## dest :" + findVideo.size());
         if (findVideo.size() == 0) return videoDTO.getName();
         String filename = findVideo.get(0).getName();
         String dot = ".";
@@ -139,7 +136,6 @@ public class VideoService {
 
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
                 dest = String.format("%s(%d)%s%s", fileHead, i, dot, fileExt);
-                log.info("######## dest :" + dest);
                 findVideo = videoRepository.findByNameAndUser(dest, videoDTO.getUser().toUserEntity());
                 if (findVideo.size() == 0) break;
             }
@@ -248,6 +244,8 @@ public class VideoService {
     }
 
     public List<VideoEntity> getVideoList(String username, VideoListDTO videoListDTO, Pageable pageable) {
+
+        log.info("video list {}", videoListDTO);
         if (videoListDTO.getName_like() != null) {
             UserEntity user = userRepository.findByUsername(username);
             return videoRepository.findAllByUserAndNameContaining(user, videoListDTO.getName_like(), pageable);

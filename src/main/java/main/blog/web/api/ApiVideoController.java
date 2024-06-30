@@ -70,7 +70,6 @@ public class ApiVideoController {
         Authentication authentication
                 = SecurityContextHolder.getContext().getAuthentication();
         if (!authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            log.info("get user authentication fail");
             throw new BadCredentialsException("로그인을 해주세요.");
         }
         log.info("get user credential :{} {}", authentication.getPrincipal(), authentication.getPrincipal().equals("anonymousUser"));
@@ -88,15 +87,9 @@ public class ApiVideoController {
             offset = (videoListDTO.get_start()) / pageSize;
             pageSize = videoListDTO.get_end() - videoListDTO.get_start();
         }
-        if (videoListDTO.get_sort().equals("")) {
-            videoListDTO.set_sort("id");
-        }
-        if (videoListDTO.get_order().equals("")) {
-            videoListDTO.set_order("desc");
-        }
+        log.info("contoller getVideoList {}", videoListDTO);
         Sort sortData = Sort.by(videoListDTO.get_order().equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, videoListDTO.get_sort());
         Pageable paging = PageRequest.of(offset, pageSize, sortData);
-
         List<VideoEntity> videoList = videoService.getVideoList(customUserDetails.getUsername(), videoListDTO, paging);
         List<VideoDTO> videoListData = videoList.stream()
                 .map(m-> new VideoDTO(m.getId(), new UserInfoDTO(m.getUser().getId(),
@@ -125,7 +118,6 @@ public class ApiVideoController {
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<?> isExistVideo(@PathVariable(value="videoname") String videoName) {
         CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
-        log.info("isExistVideo : " + videoName);
 
         try {
             VideoEntity video = videoService.getVideoByVideoname(videoName, customUserDetails.getUserInfoDTO().toUserEntity());
@@ -138,7 +130,6 @@ public class ApiVideoController {
 
     @RequestMapping(value = {"", "/**"}, method = {RequestMethod.POST})
     public ResponseEntity<?> contentUpload(@RequestBody @Valid VideoDTO videoDTO, final HttpServletResponse servletResponse) throws IOException {
-        log.info("content create metadata={}",videoDTO);
         CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
         videoDTO.setUser(customUserDetails.getUserInfoDTO());
         return ApiResponse.success(new ApiResponseMessage(videoService.createVideoMetaData(videoDTO), ""));
@@ -146,7 +137,6 @@ public class ApiVideoController {
 
     @RequestMapping(value = {"", "/**"}, method = {RequestMethod.PATCH})
     public ResponseEntity<?> updateVideo(@RequestBody @Valid VideoDTO videoDTO, final HttpServletResponse servletResponse) throws IOException {
-        log.info("content update metadata={}",videoDTO);
         CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
         videoDTO.setUser(customUserDetails.getUserInfoDTO());
 
@@ -163,7 +153,6 @@ public class ApiVideoController {
 
     @RequestMapping(value = {"/status"}, method = {RequestMethod.PATCH})
     public ResponseEntity<?> updateVideoUploadStatus(@RequestBody @Valid VideoUploadDTO videoUploadDTO, final HttpServletResponse servletResponse) throws IOException {
-        log.info("content update videoUploadDTO data={}",videoUploadDTO);
         CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
         videoUploadDTO.setUser(customUserDetails.getUserInfoDTO());
 
