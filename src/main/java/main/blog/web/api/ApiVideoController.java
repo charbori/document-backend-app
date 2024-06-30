@@ -113,6 +113,11 @@ public class ApiVideoController {
                         m.getUpdatedAt()
                 ))
                 .collect(Collectors.toList());
+
+        videoListData.forEach(videoDTO ->
+            log.info(videoDTO.getCreatedAt().toString())
+        );
+
         return ApiResponse.success(videoListData);
     }
 
