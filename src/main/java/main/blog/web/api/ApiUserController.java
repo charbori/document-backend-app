@@ -1,5 +1,27 @@
 package main.blog.web.api;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.file.AccessDeniedException;
+import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -13,23 +35,6 @@ import main.blog.domain.service.JoinService;
 import main.blog.util.ApiResponse;
 import main.blog.util.ApiResponseMessage;
 import main.blog.util.SendEmail;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-
-import java.io.UnsupportedEncodingException;
-import java.nio.file.AccessDeniedException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -69,8 +74,12 @@ public class ApiUserController {
         JoinDTO returnDTO = new JoinDTO();
         returnDTO.setUsername(joinDTO.getUsername());
 
-        String verificationLink = domainMainUrl + "api/v1/auth/verification?verificationCode=" + nowDate + uuid;
-        sendEmailVerification.sendEmailVerification(joinDTO.getUsername(), verificationLink);
+        try {
+            String verificationLink = domainMainUrl + "api/v1/auth/verification?verificationCode=" + nowDate + uuid;
+            sendEmailVerification.sendEmailVerification(joinDTO.getUsername(), verificationLink);
+        } catch (Exception e) {
+            log.error("send email verification error={}", e.getMessage());
+        }
 
         return ApiResponse.success(new ApiResponseMessage(returnDTO, ""));
     }

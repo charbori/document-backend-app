@@ -1,8 +1,33 @@
 package main.blog.web.api;
 
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
 import io.minio.errors.MinioException;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -16,23 +41,6 @@ import main.blog.domain.service.VideoCategoryService;
 import main.blog.domain.service.VideoService;
 import main.blog.util.ApiResponse;
 import main.blog.util.ApiResponseMessage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
-import java.nio.file.AccessDeniedException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -67,6 +75,7 @@ public class ApiVideoController {
     }
 
     private static CustomUserDetails getAuthenticatedUserDetail() {
+        log.info("start authenticate");
         Authentication authentication
                 = SecurityContextHolder.getContext().getAuthentication();
         if (!authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
@@ -80,6 +89,7 @@ public class ApiVideoController {
     @GetMapping("/video")
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     public ResponseEntity<?> getVideoList(VideoListDTO videoListDTO) {
+        log.info("start getlist");
         CustomUserDetails customUserDetails = getAuthenticatedUserDetail();
         int offset = videoListDTO.get_start() > 0 ? videoListDTO.get_start() : 0;
         int pageSize = 100;
@@ -106,10 +116,6 @@ public class ApiVideoController {
                         m.getUpdatedAt()
                 ))
                 .collect(Collectors.toList());
-
-        videoListData.forEach(videoDTO ->
-            log.info(videoDTO.getCreatedAt().toString())
-        );
 
         return ApiResponse.success(videoListData);
     }

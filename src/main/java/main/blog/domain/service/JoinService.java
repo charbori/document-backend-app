@@ -1,22 +1,19 @@
 package main.blog.domain.service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import jakarta.persistence.EntityNotFoundException;
 import main.blog.domain.dto.JoinDTO;
 import main.blog.domain.entity.UserEntity;
 import main.blog.domain.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Optional;
 
 @Service
 public class JoinService {
@@ -32,7 +29,10 @@ public class JoinService {
         userEntity.setUsername(joinDTO.getUsername());
         userEntity.setPassword(bCryptPasswordEncoder.encode(joinDTO.getPassword()));
         userEntity.setRole("ROLE_ADMIN");
-        userEntity.setVerificationCode(joinDTO.getVerificationCode());
+        //userEntity.setVerificationCode(joinDTO.getVerificationCode());
+        userEntity.setVerification("Y");
+        userEntity.setVerificationAt(LocalDateTime.now());
+        userEntity.setVerificationCode("");
 
         return userRepository.save(userEntity);
     }
