@@ -35,3 +35,10 @@ out/
 
 ### VS Code ###
 .vscode/
+
+*.rest
+*.cnf
+*.jar
+
+**/application-dev.properties
+**/application.properties

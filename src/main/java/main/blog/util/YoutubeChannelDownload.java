@@ -107,7 +107,8 @@ public class YoutubeChannelDownload {
         //       The maximum file size for this operation is 274877906944.
         //String videoPath = "C:\\Users\\Admin01\\Downloads\\6580591-hd_1080_2048_25fps.mp4";
         //String videoPath = "C:\\Users\\Admin01\\Downloads\\7505112-hd_1080_2048_25fps.mp4";
-        String videoPath = "C:\\Users\\Admin01\\Downloads\\3997803-hd_1080_2048_25fps.mp4";
+        //String videoPath = "C:\\Users\\Admin01\\Downloads\\3997803-hd_1080_2048_25fps.mp4";
+        String videoPath = "./data/video/sample-video.mp4"; // Use relative path instead of hardcoded Windows path
         File mediaFile = new File(videoPath);
         InputStreamContent mediaContent =
                 new InputStreamContent("application/octet-stream",
