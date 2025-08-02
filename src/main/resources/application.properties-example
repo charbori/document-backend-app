@@ -1,10 +1,11 @@
 spring.profiles.active=dev
 #spring.profiles.active=prod
 
-minio.access.name=minio
-minio.access.secret=lazy!00$girl
-minio.url=http://158.180.94.85:9000
-minio.bucket.name=video-manager
+# MinIO 설정
+minio.access.name=your-minio-username
+minio.access.secret=your-minio-secret
+minio.url=http://your-minio-url:9000
+minio.bucket.name=your-bucket-name
 spring.servlet.multipart.max-file-size=1MB
 spring.servlet.multipart.max-request-size=1MB
 
@@ -32,20 +33,20 @@ server.error.include-stacktrace=never
 server.error.include-binding-errors=never
 
 # spring api auth secret-key
-aes.secret-key=QsbkGrY4rVYlVy6t/z25Bw==
+aes.secret-key=your-aes-secret-key
 
 jwt.expiration_time=86400000
-jwt.secret=VTNWQzFscmxObEF3aWtOTUFiU1U4TEIzeFF3Umw2VmNMT2RVYUhIR0xzNEN1Q2VXcnV6QWdkN0h1dkJyanY3YQ==
+jwt.secret=your-jwt-secret
 
 globally_quoted_identifiers=true
 NON_KEYWORDS=USER
 
+# 이메일 설정
 spring.mail.default-encoding=UTF-8
 spring.mail.host=smtp.naver.com
 spring.mail.port=465
-spring.mail.username=paosidu@naver.com
-# spring.mail.password=YYCNVPSLVZMS
-spring.mail.password=lazy!00$girl
+spring.mail.username=your-email@naver.com
+spring.mail.password=your-email-password
 spring.mail.properties.mail.transport.protocol=smtp
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.debug=true
@@ -56,15 +57,11 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 #---
 spring.config.activate.on-profile=dev
 
-#spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-#spring.datasource.url=jdbc:mysql://172.30.1.16:3306/blog?characterEncoding=UTF-8&serverTimezone=UTC
-#spring.datasource.username=jaehyeok
-#spring.datasource.password=lazy!00$girl
+# 개발환경 데이터베이스 (H2)
 spring.datasource.driverClassName=org.h2.Driver
-spring.datasource.url=jdbc:h2:mem:testdb # 인메모리 모드 (애플리케이션 종료 시 데이터 사라짐)
+spring.datasource.url=jdbc:h2:mem:testdb
 spring.datasource.username=sa 
 spring.datasource.password= 
-
 
 server.context-path=/test
 app.server.data.directory=./data/video
@@ -73,25 +70,25 @@ tus.server.data.directory=./data/tus
 spring.jpa.properties.hibernate.show_sql=true
 spring.jpa.properties.hibernate.use_sql_comments=true
 logging.level.org.hibernate.type.descriptor.sql=trace
-#logging.level.root=error
 
 file.filepath=./data/files
 
 domain.url=http://localhost:8080/
 domain.front.url=http://localhost:8889/
 
-auth.path.callback=https://dev.couhensoft.com/oauth2/callback
-auth.key.client.tiktok=awi26jvyuznaicno
+auth.path.callback=https://dev.yourdomain.com/oauth2/callback
+auth.key.client.tiktok=your-tiktok-client-key
 
 #---
 spring.config.activate.on-profile=prod
-domain.url=https://api.couhensoft.com/
-domain.front.url=https://couhensoft.com/
+domain.url=https://api.yourdomain.com/
+domain.front.url=https://yourdomain.com/
 
+# 운영환경 데이터베이스 (MySQL)
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-spring.datasource.url=jdbc:mysql://152.67.222.59:3306/blog?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=UTC
-spring.datasource.username=jaehyeok
-spring.datasource.password=lazy!00$girl
+spring.datasource.url=jdbc:mysql://your-mysql-host:3306/your-database?autoReconnect=true&characterEncoding=UTF-8&serverTimezone=UTC
+spring.datasource.username=your-mysql-username
+spring.datasource.password=your-mysql-password
 
 spring.jpa.properties.hibernate.show_sql=false
 spring.jpa.properties.hibernate.use_sql_comments=false
@@ -103,6 +100,7 @@ app.server.data.directory=/app/videos
 tus.server.data.directory=/app/tus
 file.filepath=/app
 
+# Actuator 설정
 management.endpoint.metrics.enabled=true
 management.endpoint.prometheus.enabled=true
 management.endpoint.metrics.enabled=true
@@ -112,4 +110,4 @@ management.endpoints.web.exposure.exclude=env,beans
 management.info.os.enabled=true
 management.info.java.enabled=true
 management.info.env.enabled=true
-logging.level.org.springframework.cache=TRACE
+logging.level.org.springframework.cache=TRACE 

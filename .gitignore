@@ -40,5 +40,9 @@ out/
 *.cnf
 *.jar
 
-**/application-dev.properties
-**/application.properties
+application-dev.properties
+application.properties
+application-prod.properties
+
+gradlew
+gradlew.bat
