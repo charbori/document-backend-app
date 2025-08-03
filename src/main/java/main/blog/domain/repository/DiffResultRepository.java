@@ -17,6 +17,15 @@ import main.blog.domain.entity.UserEntity;
 @Repository
 public interface DiffResultRepository extends JpaRepository<DiffResultEntity, Long> {
     
+    @Query("SELECT d FROM DiffResultEntity d " +
+           "LEFT JOIN FETCH d.user " +
+           "LEFT JOIN FETCH d.originalDocument od " +
+           "LEFT JOIN FETCH od.user " +
+           "LEFT JOIN FETCH d.compareDocument cd " +
+           "LEFT JOIN FETCH cd.user " +
+           "WHERE d.id = :id AND d.user = :user")
+    Optional<DiffResultEntity> findByIdAndUserWithFetch(@Param("id") Long id, @Param("user") UserEntity user);
+    
     Optional<DiffResultEntity> findByIdAndUser(Long id, UserEntity user);
     
     List<DiffResultEntity> findByUserOrderByCreatedAtDesc(UserEntity user);

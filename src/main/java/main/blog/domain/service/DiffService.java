@@ -71,12 +71,16 @@ public class DiffService {
         
         DiffResultEntity savedResult = diffResultRepository.save(diffEntity);
         
-        return convertToResponseDTO(savedResult, diffResult.getDiffLines());
+        // 저장된 결과를 fetch join으로 다시 조회하여 lazy loading 문제 해결
+        DiffResultEntity fetchedResult = diffResultRepository.findByIdAndUserWithFetch(savedResult.getId(), user)
+                .orElseThrow(() -> new EntityNotFoundException("저장된 diff 결과를 찾을 수 없습니다: " + savedResult.getId()));
+        
+        return convertToResponseDTO(fetchedResult, diffResult.getDiffLines());
     }
 
     @Transactional(readOnly = true)
     public DiffResponseDTO getDiffResult(Long diffId, UserEntity user) {
-        DiffResultEntity diffResult = diffResultRepository.findByIdAndUser(diffId, user)
+        DiffResultEntity diffResult = diffResultRepository.findByIdAndUserWithFetch(diffId, user)
                 .orElseThrow(() -> new EntityNotFoundException("diff 결과를 찾을 수 없습니다: " + diffId));
         
         return convertToResponseDTO(diffResult, null);
@@ -174,9 +178,28 @@ public class DiffService {
     private DiffResponseDTO convertToResponseDTO(DiffResultEntity entity, List<DiffResponseDTO.DiffLineDTO> diffLines) {
         DiffResponseDTO response = new DiffResponseDTO();
         response.setId(entity.getId());
-        response.setUser(entity.getUser() != null ? entity.getUser().toUserInfoDTO() : null);
-        response.setOriginalDocument(entity.getOriginalDocument() != null ? convertToDocumentDTO(entity.getOriginalDocument()) : null);
-        response.setCompareDocument(entity.getCompareDocument() != null ? convertToDocumentDTO(entity.getCompareDocument()) : null);
+        
+        try {
+            response.setUser(entity.getUser() != null ? entity.getUser().toUserInfoDTO() : null);
+        } catch (Exception e) {
+            log.warn("User 정보 로딩 실패: {}", e.getMessage());
+            response.setUser(null);
+        }
+        
+        try {
+            response.setOriginalDocument(entity.getOriginalDocument() != null ? convertToDocumentDTO(entity.getOriginalDocument()) : null);
+        } catch (Exception e) {
+            log.warn("원본 문서 정보 로딩 실패: {}", e.getMessage());
+            response.setOriginalDocument(null);
+        }
+        
+        try {
+            response.setCompareDocument(entity.getCompareDocument() != null ? convertToDocumentDTO(entity.getCompareDocument()) : null);
+        } catch (Exception e) {
+            log.warn("비교 문서 정보 로딩 실패: {}", e.getMessage());
+            response.setCompareDocument(null);
+        }
+        
         response.setDiffResult(entity.getDiffResult());
         response.setHtmlDiff(entity.getHtmlDiff());
         response.setDiffTitle(entity.getDiffTitle());
@@ -194,7 +217,14 @@ public class DiffService {
     private main.blog.domain.dto.diff.DocumentDTO convertToDocumentDTO(DocumentEntity entity) {
         main.blog.domain.dto.diff.DocumentDTO dto = new main.blog.domain.dto.diff.DocumentDTO();
         dto.setId(entity.getId());
-        dto.setUser(entity.getUser() != null ? entity.getUser().toUserInfoDTO() : null);
+        
+        try {
+            dto.setUser(entity.getUser() != null ? entity.getUser().toUserInfoDTO() : null);
+        } catch (Exception e) {
+            log.warn("문서의 User 정보 로딩 실패: {}", e.getMessage());
+            dto.setUser(null);
+        }
+        
         dto.setTitle(entity.getTitle());
         dto.setContent(entity.getContent());
         dto.setDescription(entity.getDescription());
