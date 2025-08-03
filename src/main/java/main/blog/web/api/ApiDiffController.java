@@ -101,6 +101,11 @@ public class ApiDiffController {
                     dto.setDeletedLines(entity.getDeletedLines());
                     dto.setModifiedLines(entity.getModifiedLines());
                     dto.setCreatedAt(entity.getCreatedAt());
+                    
+                    // 문서 ID들 설정
+                    dto.setOriginalDocumentId(entity.getOriginalDocument() != null ? entity.getOriginalDocument().getId() : null);
+                    dto.setCompareDocumentId(entity.getCompareDocument() != null ? entity.getCompareDocument().getId() : null);
+                    
                     return dto;
                 })
                 .collect(Collectors.toList());

@@ -1,13 +1,13 @@
 package main.blog.domain.dto.diff;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import main.blog.domain.dto.UserInfoDTO;
 import main.blog.domain.entity.DiffResultEntity;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -21,6 +21,11 @@ public class DiffResponseDTO {
     private DocumentDTO originalDocument;
     
     private DocumentDTO compareDocument;
+    
+    // 문서 ID들을 별도로 제공
+    private Long originalDocumentId;
+    
+    private Long compareDocumentId;
     
     private String diffResult;
     
