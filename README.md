@@ -12,7 +12,7 @@
 * jar 파일 실행 : java -jar app.jar
 
 ## 현재 운영서비스
-https://couhensoft.com/compare
+* https://couhensoft.com/compare
   
 ## 주요 의존성
 
