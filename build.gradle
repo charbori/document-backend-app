@@ -72,7 +72,7 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	testCompileOnly 'org.projectlombok:lombok'
 
-	runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly 'mysql:mysql-connector-java'
     // H2 Database
     runtimeOnly 'com.h2database:h2' // 런타임 스코프로 지정
 

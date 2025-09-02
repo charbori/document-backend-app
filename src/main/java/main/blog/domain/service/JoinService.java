@@ -25,7 +25,9 @@ public class JoinService {
 
     public Object joinProcess(JoinDTO joinDTO) {
         UserEntity userEntity = new UserEntity();
-
+        if (userRepository.existsByUsername(joinDTO.getUsername())) {
+            throw new IllegalArgumentException("이미 존재하는 사용자입니다: " + joinDTO.getUsername());
+        }
         userEntity.setUsername(joinDTO.getUsername());
         userEntity.setPassword(bCryptPasswordEncoder.encode(joinDTO.getPassword()));
         userEntity.setRole("ROLE_ADMIN");

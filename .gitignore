@@ -46,3 +46,6 @@ application-prod.properties
 
 gradlew
 gradlew.bat
+
+
+*.log
