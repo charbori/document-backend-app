@@ -41,7 +41,6 @@ out/
 *.jar
 
 application-dev.properties
-application.properties
 application-prod.properties
 
 gradlew
