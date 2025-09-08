@@ -7,12 +7,11 @@ pipeline {
         // 각 Credential의 종류는 'Secret text'로 가정합니다.
         DOCUMENT_APP_DOMAIN_URL          = credentials('DOCUMENT_APP_DOMAIN_URL')
         DOCUMENT_APP_DOMAIN_FRONT_URL    = credentials('DOCUMENT_APP_DOMAIN_FRONT_URL')
-        DOCUMENT_APP_DATASOURCE_URL      = credentials('DOCUMENT_APP_DATASOURCE_URL')
         DOCUMENT_APP_DATASOURCE_USERNAME = credentials('DOCUMENT_APP_DATASOURCE_USERNAME')
         DOCUMENT_APP_DATASOURCE_PASSWORD = credentials('DOCUMENT_APP_DATASOURCE_PASSWORD')
         DOCUMENT_APP_AES_SECRET_KEY      = credentials('DOCUMENT_APP_AES_SECRET_KEY')
-        DOUCMENT_APP_DEPLOY_SSH_KEY      = credentials('DOCUMENT_APP_DEPLOY_SSH_KEY')
-        
+        DOCUMENT_APP_DEPLOY_SSH_KEY      = credentials('DOCUMENT_APP_DEPLOY_SSH_KEY')
+
     }
 
     tools {
@@ -55,7 +54,7 @@ pipeline {
                 script {
                     // --- 3. SSH Agent를 사용하여 원격 서버에 접속 ---
                     // 'deploy-server-ssh-key'는 Jenkins에 등록한 SSH Credential의 ID 입니다.
-                    sshagent(credentials: ['DOUCMENT_APP_DEPLOY_SSH_KEY']) {
+                    sshagent(credentials: ['DOCUMENT_APP_DEPLOY_SSH_KEY']) {
                         
                         // 변수 설정
                         def remoteUser = 'ubuntu' // 👈 배포 서버 접속 유저 이름으로 변경하세요.
@@ -84,7 +83,6 @@ pipeline {
                                 echo "Starting new process..."
                                 export DOCUMENT_APP_DOMAIN_URL="${DOCUMENT_APP_DOMAIN_URL}"
                                 export DOCUMENT_APP_DOMAIN_FRONT_URL="${DOCUMENT_APP_DOMAIN_FRONT_URL}"
-                                export DOCUMENT_APP_DATASOURCE_URL="${DOCUMENT_APP_DATASOURCE_URL}"
                                 export DOCUMENT_APP_DATASOURCE_USERNAME="${DOCUMENT_APP_DATASOURCE_USERNAME}"
                                 export DOCUMENT_APP_DATASOURCE_PASSWORD="${DOCUMENT_APP_DATASOURCE_PASSWORD}"
                                 export DOCUMENT_APP_AES_SECRET_KEY="${DOCUMENT_APP_AES_SECRET_KEY}"
