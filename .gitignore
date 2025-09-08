@@ -43,7 +43,7 @@ out/
 application-dev.properties
 application-prod.properties
 
-gradlew
+#gradlew
 gradlew.bat
 
 
