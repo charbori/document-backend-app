@@ -31,10 +31,17 @@ public class JoinService {
         userEntity.setUsername(joinDTO.getUsername());
         userEntity.setPassword(bCryptPasswordEncoder.encode(joinDTO.getPassword()));
         userEntity.setRole("ROLE_ADMIN");
-        //userEntity.setVerificationCode(joinDTO.getVerificationCode());
-        userEntity.setVerification("Y");
-        userEntity.setVerificationAt(LocalDateTime.now());
-        userEntity.setVerificationCode("");
+        
+        // verificationCode가 있으면 이메일 인증이 필요한 상태로, 없으면 즉시 활성화
+        if (joinDTO.getVerificationCode() != null && !joinDTO.getVerificationCode().isEmpty()) {
+            userEntity.setVerificationCode(joinDTO.getVerificationCode());
+            userEntity.setVerification("N");
+            userEntity.setVerificationAt(null);
+        } else {
+            userEntity.setVerificationCode("");
+            userEntity.setVerification("Y");
+            userEntity.setVerificationAt(LocalDateTime.now());
+        }
 
         return userRepository.save(userEntity);
     }

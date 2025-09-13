@@ -6,9 +6,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
 @EnableCaching
+@EnableJpaAuditing
 public class BlogApplication {
 
 	public static void main(String[] args) {
@@ -18,10 +21,11 @@ public class BlogApplication {
 	@Value("${tus.server.data.directory}")
 	protected String tusDataPath;
 
-	@Value("#{servletContext.contextPath}")
+	@Value("${server.servlet.context-path:/}")
 	private String servletContextPath;
 
 	@Bean
+	@Profile("!test")  // 테스트 환경에서는 제외
 	public TusFileUploadService tusFileUploadService() {
 		return new TusFileUploadService()
 				.withStoragePath(tusDataPath)

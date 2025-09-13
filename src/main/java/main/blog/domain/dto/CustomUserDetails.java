@@ -1,14 +1,12 @@
 package main.blog.domain.dto;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import main.blog.domain.entity.UserEntity;
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import lombok.Data;
 
 @Data
 public class CustomUserDetails implements UserDetails {
