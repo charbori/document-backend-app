@@ -30,7 +30,6 @@ pipeline {
             steps {
                 sh 'chmod +x ./gradlew'
                 sh './gradlew test'
-                sh 'cp build'
             }
         }
 
