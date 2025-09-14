@@ -60,7 +60,7 @@ pipeline {
                         def remoteUser = 'ubuntu' // 👈 배포 서버 접속 유저 이름으로 변경하세요.
                         def remoteHost = '150.230.253.79'
                         def remoteDir = '/home/ubuntu/app' // 👈 JAR 파일을 업로드할 서버 디렉토리
-                        def jarFile = findFiles(glob: 'build/libs/*.jar')[0]
+                        def jarFile = findFiles(glob: 'build/libs/web-differ*.jar')[0]
                         def appName = jarFile.name
 
                         echo "Deploying ${appName} to ${remoteUser}@${remoteHost}"
