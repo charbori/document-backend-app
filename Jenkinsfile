@@ -30,12 +30,16 @@ pipeline {
             steps {
                 sh 'chmod +x ./gradlew'
                 sh './gradlew test'
+                sh 'cp build'
             }
         }
 
         stage('Build') {
             steps {
                 sh './gradlew clean build'
+                sh 'cp build/libs/web-differ.jar /home/ubuntu/video-manager-server/app/web-differ.jar'
+                sh 'echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..." >> /home/ubuntu/video-manager-server/app/deploy-${env.BUILD_NUMBER}.log'
+                sh 'docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}'
             }
         }
 
@@ -107,58 +111,55 @@ pipeline {
                 // DOCKER 스크립트
                 // 로컬서버에서 앱 기동시 스크립트
                 script {
+                    def DEPLOY_LOG = "/home/ubuntu/video-manager-server/app/deploy-${env.BUILD_NUMBER}.log"
+
                     sh """
                         #!/bin/bash
                         set -e
-                        DEPLOY_LOG="${remoteDir}/deploy-${env.BUILD_NUMBER}.log"
 
                         # 1. 어느 포트에 배포할지 결정
                         # 8889 포트에서 실행 중인 컨테이너가 있는지 확인
                         if docker ps -q -f "publish=8889" | grep -q .; then
-                            echo "Current app is running on port 8889. Deploying to port 8890." >> DEPLOY_LOG
+                            echo "Current app is running on port 8889. Deploying to port 8890." >> \${DEPLOY_LOG}
                             IDLE_PORT=8890
                             OLD_PORT=8889
                         else
-                            echo "Current app is running on port 8890 (or none). Deploying to port 8889." >> DEPLOY_LOG
+                            echo "Current app is running on port 8890 (or none). Deploying to port 8889." >> \${DEPLOY_LOG}
                             IDLE_PORT=8889
                             OLD_PORT=8890
                         fi
 
                         # 2. 새 버전 컨테이너 생성
-                        cp build/libs/web-differ.jar /home/ubuntu/video-manager-server/app/web-differ.jar
-                        echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..." >> DEPLOY_LOG
-                        docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+                        echo "Build app lit " >> \${DEPLOY_LOG}
+                        docker images | grep web-differ >> \${DEPLOY_LOG}
 
-                        echo "Build app lit " >> DEPLOY_LOG
-                        docker images | grep web-differ >> DEPLOY_LOG
-
-                        echo "Starting new container on port \${IDLE_PORT}..." >> DEPLOY_LOG
+                        echo "Starting new container on port \${IDLE_PORT}..." >> \${DEPLOY_LOG}
                         # 컨테이너 이름에 포트 번호를 넣어 식별 용이하게 함
                         docker run -d --name web-differ-\${IDLE_PORT} -p \${IDLE_PORT}:8080 \\
                             -e SPRING_PROFILES_ACTIVE=prod \\
-                            -e DOCUMENT_APP_DOMAIN_URL="${env.DOCUMENT_APP_DOMAIN_URL}" \\
-                            -e DOCUMENT_APP_DOMAIN_FRONT_URL="${env.DOCUMENT_APP_DOMAIN_FRONT_URL}" \\
-                            -e DOCUMENT_APP_DATASOURCE_USERNAME="${env.DOCUMENT_APP_DATASOURCE_USERNAME}" \\
-                            -e DOCUMENT_APP_DATASOURCE_PASSWORD="${env.DOCUMENT_APP_DATASOURCE_PASSWORD}" \\
-                            -e DOCUMENT_APP_AES_SECRET_KEY="${env.DOCUMENT_APP_AES_SECRET_KEY}" \\
-                            ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+                            -e DOCUMENT_APP_DOMAIN_URL="\${env.DOCUMENT_APP_DOMAIN_URL}" \\
+                            -e DOCUMENT_APP_DOMAIN_FRONT_URL="\${env.DOCUMENT_APP_DOMAIN_FRONT_URL}" \\
+                            -e DOCUMENT_APP_DATASOURCE_USERNAME="\${env.DOCUMENT_APP_DATASOURCE_USERNAME}" \\
+                            -e DOCUMENT_APP_DATASOURCE_PASSWORD="\${env.DOCUMENT_APP_DATASOURCE_PASSWORD}" \\
+                            -e DOCUMENT_APP_AES_SECRET_KEY="\${env.DOCUMENT_APP_AES_SECRET_KEY}" \\
+                            \${DOCKER_IMAGE_NAME}:\${DOCKER_IMAGE_TAG}
 
                         # 3. 상태 확인 (Health Check)
-                        echo "Waiting for health check on port \${IDLE_PORT}..." >> DEPLOY_LOG
+                        echo "Waiting for health check on port \${IDLE_PORT}..." >> \${DEPLOY_LOG}
                         sleep 10
 
                         for i in {1..3}; do
                             RESPONSE_CODE=\$(curl -s -o /dev/null -w "%{http_code}" http://localhost:\${IDLE_PORT}/actuator/health )
                             if [ "\$RESPONSE_CODE" -ge 200 ] && [ "\$RESPONSE_CODE" -lt 400 ]; then
-                                echo "Health check successful." >> DEPLOY_LOG
+                                echo "Health check successful." >> \${DEPLOY_LOG}
                                 break
                             fi
-                            echo "Health check failed. Retrying..." >> DEPLOY_LOG
+                            echo "Health check failed. Retrying..." >> \${DEPLOY_LOG}
                             sleep 5
                         done
 
                         if [ "\$i" -eq 3 ]; then
-                            echo "Health check failed. Rolling back..." >> DEPLOY_LOG
+                            echo "Health check failed. Rolling back..." >> \${DEPLOY_LOG}
                             docker stop web-differ-\${IDLE_PORT} && docker rm web-differ-\${IDLE_PORT}
                             exit 1
                         fi
@@ -166,13 +167,13 @@ pipeline {
                         # 4. 구 버전 컨테이너 종료
                         OLD_CONTAINER_ID=\$(docker ps -q -f "publish=\${OLD_PORT}")
                         if [ -n "\$OLD_CONTAINER_ID" ]; then
-                            echo "Stopping and removing old container on port \${OLD_PORT}..." >> DEPLOY_LOG
+                            echo "Stopping and removing old container on port \${OLD_PORT}..." >> \${DEPLOY_LOG}
                             docker stop \$OLD_CONTAINER_ID && docker rm \$OLD_CONTAINER_ID
                         else
-                            echo "No old container found to stop." >> DEPLOY_LOG
+                            echo "No old container found to stop." >> \${DEPLOY_LOG}
                         fi
 
-                        echo "### Deployment to port \${IDLE_PORT} completed successfully ###" >> DEPLOY_LOG
+                        echo "### Deployment to port \${IDLE_PORT} completed successfully ###" >> \${DEPLOY_LOG}
                     """
                 }
             }
