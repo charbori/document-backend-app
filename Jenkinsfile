@@ -10,7 +10,7 @@ pipeline {
         DOCUMENT_APP_DATASOURCE_USERNAME = credentials('DOCUMENT_APP_DATASOURCE_USERNAME')
         DOCUMENT_APP_DATASOURCE_PASSWORD = credentials('DOCUMENT_APP_DATASOURCE_PASSWORD')
         DOCUMENT_APP_AES_SECRET_KEY      = credentials('DOCUMENT_APP_AES_SECRET_KEY')
-        DOCUMENT_APP_DEPLOY_SSH_KEY      = credentials('DOCUMENT_APP_DEPLOY_SSH_KEY')
+        //DOCUMENT_APP_DEPLOY_SSH_KEY      = credentials('DOCUMENT_APP_DEPLOY_SSH_KEY')
 
     }
 
@@ -55,7 +55,7 @@ pipeline {
                     // --- 3. SSH Agent를 사용하여 원격 서버에 접속 ---
                     // 'deploy-server-ssh-key'는 Jenkins에 등록한 SSH Credential의 ID 입니다.
                     sshagent(credentials: ['DOCUMENT_APP_DEPLOY_SSH_KEY']) {
-                        
+
                         // 변수 설정
                         def remoteUser = 'ubuntu' // 👈 배포 서버 접속 유저 이름으로 변경하세요.
                         def remoteHost = '150.230.253.79'
@@ -70,7 +70,7 @@ pipeline {
 
                         // --- 5. ssh를 이용해 원격 배포 스크립트 실행 ---
                         sh """
-                            ssh -o StrictHostKeyChecking=no ${jarFile.path} ${remoteUser}@${remoteHost} '
+                            ssh -o StrictHostKeyChecking=no ${remoteUser}@${remoteHost} '
                                 # 기존에 실행 중인 애플리케이션 프로세스를 종료합니다.
                                 PID=\$(pgrep -f ${appName})
                                 if [ -n "\$PID" ]; then
@@ -87,8 +87,11 @@ pipeline {
                                 export DOCUMENT_APP_DATASOURCE_USERNAME="${env.DOCUMENT_APP_DATASOURCE_USERNAME}"
                                 export DOCUMENT_APP_DATASOURCE_PASSWORD="${env.DOCUMENT_APP_DATASOURCE_PASSWORD}"
                                 export DOCUMENT_APP_AES_SECRET_KEY="${env.DOCUMENT_APP_AES_SECRET_KEY}"
-                                
-                                nohup java -jar ${remoteDir}/${appName} > ${remoteDir}/app.log 2>&1 &
+
+
+                                echo $DOCUMENT_APP_AES_SECRET_KEY > ${remoteDir}/deploy.log
+
+                                nohup java -jar ${remoteDir}/${appName} --spring.profiles.active=prod > ${remoteDir}/app.log 2>&1 &
                                 
                                 echo "Deployment completed successfully." > ${remoteDir}/deploy.log
                             '
