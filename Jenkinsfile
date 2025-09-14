@@ -86,9 +86,15 @@ pipeline {
                                 # 기존에 실행 중인 애플리케이션 프로세스를 종료합니다.
                                 PID=\$(pgrep -f ${appName})
                                 if [ -n "\$PID" ]; then
-                                    echo "Killing old process: \$PID"
-                                    kill -15 \$PID
-                                    sleep 5
+                                    echo "Waiting for process to terminate..." >> ${deployLog}
+                                    for i in {1..3}; do
+                                        if ! pgrep -f ${appName} > /dev/null; then
+                                            echo "Process terminated successfully." >> ${deployLog}
+                                            break
+                                        fi
+                                        echo -n "."
+                                        sleep 1
+                                    done
                                 fi
 
                                 # 환경 변수를 주입하여 새 애플리케이션을 백그라운드로 실행합니다.
