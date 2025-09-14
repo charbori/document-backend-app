@@ -36,20 +36,22 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh './gradlew clean build'
-                def jarFile = findFiles(glob: 'build/libs/web-differ*.jar')[0]
-                if (!jarFile) {
-                    error "빌드된 JAR 파일을 찾을 수 없습니다. 빌드가 실패했거나 파일 이름이 다릅니다."
-                }
-                echo "Found JAR file: ${jarFile.path}"
+                script {
+                    sh './gradlew clean build'
+                    def jarFile = findFiles(glob: 'build/libs/web-differ*.jar')[0]
+                    if (!jarFile) {
+                        error "빌드된 JAR 파일을 찾을 수 없습니다. 빌드가 실패했거나 파일 이름이 다릅니다."
+                    }
+                    echo "Found JAR file: ${jarFile.path}"
 
-                // 3. Dockerfile이 찾기 쉬운 이름으로 Workspace 내에서 이름 변경
-                // cp를 외부로 하는 대신, Workspace 내에서 이름을 변경합니다.
-                // Dockerfile의 COPY 명령어와 경로/이름을 일치시킵니다.
-                // 예: Dockerfile이 'build/libs/web-differ.jar'를 복사한다고 가정
-                sh "mv ${jarFile.path} build/libs/web-differ.jar"
-                sh 'echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..." >> /home/ubuntu/video-manager-server/app/deploy-${env.BUILD_NUMBER}.log'
-                sh 'docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}'
+                    // 3. Dockerfile이 찾기 쉬운 이름으로 Workspace 내에서 이름 변경
+                    // cp를 외부로 하는 대신, Workspace 내에서 이름을 변경합니다.
+                    // Dockerfile의 COPY 명령어와 경로/이름을 일치시킵니다.
+                    // 예: Dockerfile이 'build/libs/web-differ.jar'를 복사한다고 가정
+                    sh "mv ${jarFile.path} build/libs/web-differ.jar"
+                    sh 'echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..." >> /home/ubuntu/video-manager-server/app/deploy-${env.BUILD_NUMBER}.log'
+                    sh 'docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}'
+                }
             }
         }
 
