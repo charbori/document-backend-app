@@ -43,7 +43,7 @@ pipeline {
                     }
                     echo "Found JAR file: ${jarFile.path}"
 
-                    sh 'echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..." >> /home/ubuntu/video-manager-server/app/deploy-${env.BUILD_NUMBER}.log'
+                    sh 'echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..." >> /var/log/deploy/deploy-${env.BUILD_NUMBER}.log'
                     sh 'docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} .'
                 }
             }
@@ -117,7 +117,7 @@ pipeline {
                 // DOCKER 스크립트
                 // 로컬서버에서 앱 기동시 스크립트
                 script {
-                    def DEPLOY_LOG = "/home/ubuntu/video-manager-server/app/deploy-${env.BUILD_NUMBER}.log"
+                    def DEPLOY_LOG = "/var/log/deploy/deploy-${env.BUILD_NUMBER}.log"
 
                     sh """
                         #!/bin/bash
