@@ -81,11 +81,11 @@ pipeline {
 
                                 # 환경 변수를 주입하여 새 애플리케이션을 백그라운드로 실행합니다.
                                 echo "Starting new process..."
-                                export DOCUMENT_APP_DOMAIN_URL="${DOCUMENT_APP_DOMAIN_URL}"
-                                export DOCUMENT_APP_DOMAIN_FRONT_URL="${DOCUMENT_APP_DOMAIN_FRONT_URL}"
-                                export DOCUMENT_APP_DATASOURCE_USERNAME="${DOCUMENT_APP_DATASOURCE_USERNAME}"
-                                export DOCUMENT_APP_DATASOURCE_PASSWORD="${DOCUMENT_APP_DATASOURCE_PASSWORD}"
-                                export DOCUMENT_APP_AES_SECRET_KEY="${DOCUMENT_APP_AES_SECRET_KEY}"
+                                export DOCUMENT_APP_DOMAIN_URL="${env.DOCUMENT_APP_DOMAIN_URL}"
+                                export DOCUMENT_APP_DOMAIN_FRONT_URL="${env.DOCUMENT_APP_DOMAIN_FRONT_URL}"
+                                export DOCUMENT_APP_DATASOURCE_USERNAME="${env.DOCUMENT_APP_DATASOURCE_USERNAME}"
+                                export DOCUMENT_APP_DATASOURCE_PASSWORD="${env.DOCUMENT_APP_DATASOURCE_PASSWORD}"
+                                export DOCUMENT_APP_AES_SECRET_KEY="${env.DOCUMENT_APP_AES_SECRET_KEY}"
                                 
                                 nohup java -jar ${remoteDir}/${appName} > ${remoteDir}/app.log 2>&1 &
                                 
