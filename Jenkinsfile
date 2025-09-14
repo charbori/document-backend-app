@@ -45,8 +45,8 @@ pipeline {
                         #!/bin/bash
                         set -e
 
-                        sh 'echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..."'
-                        sh 'docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} .'
+                        echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..."
+                        docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} .
                     """
                 }
             }
