@@ -41,10 +41,13 @@ pipeline {
                     if (!jarFile) {
                         error "빌드된 JAR 파일을 찾을 수 없습니다. 빌드가 실패했거나 파일 이름이 다릅니다."
                     }
-                    echo "Found JAR file: ${jarFile.path}"
+                    sh """
+                        #!/bin/bash
+                        set -e
 
-                    sh 'echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..." >> /var/log/deploy/deploy-${env.BUILD_NUMBER}.log'
-                    sh 'docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} .'
+                        sh 'echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..." >> /var/log/deploy/deploy-${env.BUILD_NUMBER}.log'
+                        sh 'docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} .'
+                    """
                 }
             }
         }
