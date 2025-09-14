@@ -2,9 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // --- 1. Jenkins Global Credentials 불러오기 ---
-        // Jenkins > Manage Jenkins > Credentials 에서 등록한 ID와 일치해야 합니다.
-        // 각 Credential의 종류는 'Secret text'로 가정합니다.
         DOCUMENT_APP_DOMAIN_URL          = credentials('DOCUMENT_APP_DOMAIN_URL')
         DOCUMENT_APP_DOMAIN_FRONT_URL    = credentials('DOCUMENT_APP_DOMAIN_FRONT_URL')
         DOCUMENT_APP_DATASOURCE_USERNAME = credentials('DOCUMENT_APP_DATASOURCE_USERNAME')
@@ -13,24 +10,24 @@ pipeline {
         DOCUMENT_APP_JWT_SECRET          = credentials('DOCUMENT_APP_JWT_SECRET')
         //DOCUMENT_APP_DEPLOY_SSH_KEY      = credentials('DOCUMENT_APP_DEPLOY_SSH_KEY')
 
+        // 도커 배포
+        DOCKER_IMAGE_NAME = 'web-differ'
+        DOCKER_IMAGE_TAG = "build-${env.BUILD_NUMBER}"
     }
 
     tools {
-        // Jenkins > Global Tool Configuration 에 설정된 JDK 이름을 사용합니다.
         jdk 'JDK_17'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // main 브랜치의 소스코드를 가져옵니다.
                 git branch: 'main', url: 'https://github.com/charbori/document-backend-app.git'
             }
         }
 
         stage('Validate') {
             steps {
-                // Gradle Wrapper 실행 권한 부여 및 테스트 실행
                 sh 'chmod +x ./gradlew'
                 sh './gradlew test'
             }
@@ -38,40 +35,30 @@ pipeline {
 
         stage('Build') {
             steps {
-                // 애플리케이션을 빌드하여 JAR 파일을 생성합니다.
                 sh './gradlew clean build'
             }
         }
 
-        // --- 2. 배포 스테이지 (main 브랜치일 경우에만 실행) ---
         stage('Deploy to Production') {
             when {
                 branch 'main'
             }
             steps {
-                // 배포 전 수동 승인 단계 (안전장치)
                 //input message: "정말로 프로덕션 서버(150.230.253.79)에 배포하시겠습니까?", ok: "배포 시작"
-                
+                /* //원격 서버 배포스크립트
                 script {
-                    // --- 3. SSH Agent를 사용하여 원격 서버에 접속 ---
-                    // 'deploy-server-ssh-key'는 Jenkins에 등록한 SSH Credential의 ID 입니다.
                     sshagent(credentials: ['DOCUMENT_APP_DEPLOY_SSH_KEY']) {
-
-                        // 변수 설정
-                        def remoteUser = 'ubuntu' // 👈 배포 서버 접속 유저 이름으로 변경하세요.
+                        def remoteUser = 'ubuntu'
                         def remoteHost = '150.230.253.79'
-                        def remoteDir = '/home/ubuntu/app' // 👈 JAR 파일을 업로드할 서버 디렉토리
+                        def remoteDir = '/home/ubuntu/app'
                         def jarFile = findFiles(glob: 'build/libs/web-differ*.jar')[0]
                         def appName = jarFile.name
                         def appLog = "${remoteDir}/app-${env.BUILD_NUMBER}.log"
                         def deployLog = "${remoteDir}/deploy-${env.BUILD_NUMBER}.log"
 
-                        echo "Deploying ${appName} to ${remoteUser}@${remoteHost}"
-
-                        // --- 4. scp를 이용해 JAR 파일 전송 ---
                         sh "scp -o StrictHostKeyChecking=no ${jarFile.path} ${remoteUser}@${remoteHost}:${remoteDir}/"
 
-                        // --- 5. ssh를 이용해 원격 배포 스크립트 실행 ---
+
                         sh """
                             ssh -o StrictHostKeyChecking=no ${remoteUser}@${remoteHost} '
                                 echo "=================================================================" >> ${deployLog}
@@ -115,13 +102,85 @@ pipeline {
                         """
                     }
                 }
+                    */
+
+                // DOCKER 스크립트
+                // 로컬서버에서 앱 기동시 스크립트
+                script {
+                    sh """
+                        #!/bin/bash
+                        set -e
+                        DEPLOY_LOG="${remoteDir}/deploy-${env.BUILD_NUMBER}.log"
+
+                        # 1. 어느 포트에 배포할지 결정
+                        # 8889 포트에서 실행 중인 컨테이너가 있는지 확인
+                        if docker ps -q -f "publish=8889" | grep -q .; then
+                            echo "Current app is running on port 8889. Deploying to port 8890." >> DEPLOY_LOG
+                            IDLE_PORT=8890
+                            OLD_PORT=8889
+                        else
+                            echo "Current app is running on port 8890 (or none). Deploying to port 8889." >> DEPLOY_LOG
+                            IDLE_PORT=8889
+                            OLD_PORT=8890
+                        fi
+
+                        # 2. 새 버전 컨테이너 생성
+                        cp build/libs/web-differ.jar /home/ubuntu/video-manager-server/app/web-differ.jar
+                        echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..." >> DEPLOY_LOG
+                        docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+
+                        echo "Build app lit " >> DEPLOY_LOG
+                        docker images | grep web-differ >> DEPLOY_LOG
+
+                        echo "Starting new container on port \${IDLE_PORT}..." >> DEPLOY_LOG
+                        # 컨테이너 이름에 포트 번호를 넣어 식별 용이하게 함
+                        docker run -d --name web-differ-\${IDLE_PORT} -p \${IDLE_PORT}:8080 \\
+                            -e SPRING_PROFILES_ACTIVE=prod \\
+                            -e DOCUMENT_APP_DOMAIN_URL="${env.DOCUMENT_APP_DOMAIN_URL}" \\
+                            -e DOCUMENT_APP_DOMAIN_FRONT_URL="${env.DOCUMENT_APP_DOMAIN_FRONT_URL}" \\
+                            -e DOCUMENT_APP_DATASOURCE_USERNAME="${env.DOCUMENT_APP_DATASOURCE_USERNAME}" \\
+                            -e DOCUMENT_APP_DATASOURCE_PASSWORD="${env.DOCUMENT_APP_DATASOURCE_PASSWORD}" \\
+                            -e DOCUMENT_APP_AES_SECRET_KEY="${env.DOCUMENT_APP_AES_SECRET_KEY}" \\
+                            ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+
+                        # 3. 상태 확인 (Health Check)
+                        echo "Waiting for health check on port \${IDLE_PORT}..." >> DEPLOY_LOG
+                        sleep 10
+
+                        for i in {1..3}; do
+                            RESPONSE_CODE=\$(curl -s -o /dev/null -w "%{http_code}" http://localhost:\${IDLE_PORT}/actuator/health )
+                            if [ "\$RESPONSE_CODE" -ge 200 ] && [ "\$RESPONSE_CODE" -lt 400 ]; then
+                                echo "Health check successful." >> DEPLOY_LOG
+                                break
+                            fi
+                            echo "Health check failed. Retrying..." >> DEPLOY_LOG
+                            sleep 5
+                        done
+
+                        if [ "\$i" -eq 3 ]; then
+                            echo "Health check failed. Rolling back..." >> DEPLOY_LOG
+                            docker stop web-differ-\${IDLE_PORT} && docker rm web-differ-\${IDLE_PORT}
+                            exit 1
+                        fi
+
+                        # 4. 구 버전 컨테이너 종료
+                        OLD_CONTAINER_ID=\$(docker ps -q -f "publish=\${OLD_PORT}")
+                        if [ -n "\$OLD_CONTAINER_ID" ]; then
+                            echo "Stopping and removing old container on port \${OLD_PORT}..." >> DEPLOY_LOG
+                            docker stop \$OLD_CONTAINER_ID && docker rm \$OLD_CONTAINER_ID
+                        else
+                            echo "No old container found to stop." >> DEPLOY_LOG
+                        fi
+
+                        echo "### Deployment to port \${IDLE_PORT} completed successfully ###" >> DEPLOY_LOG
+                    """
+                }
             }
         }
     }
 
     post {
         always {
-            // 빌드 결과물(JAR)을 Jenkins에 보관하고 작업 공간을 정리합니다.
             archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
             cleanWs()
         }
