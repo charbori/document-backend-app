@@ -47,7 +47,7 @@ pipeline {
                     // cp를 외부로 하는 대신, Workspace 내에서 이름을 변경합니다.
                     // Dockerfile의 COPY 명령어와 경로/이름을 일치시킵니다.
                     // 예: Dockerfile이 'build/libs/web-differ.jar'를 복사한다고 가정
-                    sh "mv ${jarFile.path} build/libs/web-differ.jar"
+                    sh "mv ${jarFile.path} /home/ubuntu/video-manager-server/app/web-differ.jar"
                     sh 'echo "Build Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}..." >> /home/ubuntu/video-manager-server/app/deploy-${env.BUILD_NUMBER}.log'
                     sh 'docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}'
                 }
