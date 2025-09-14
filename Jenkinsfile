@@ -70,7 +70,7 @@ pipeline {
 
                         // --- 5. ssh를 이용해 원격 배포 스크립트 실행 ---
                         sh """
-                            ssh -o StrictHostKeyChecking=no ${remoteUser}@${remoteHost} '
+                            ssh -o StrictHostKeyChecking=no ${jarFile.path} ${remoteUser}@${remoteHost} '
                                 # 기존에 실행 중인 애플리케이션 프로세스를 종료합니다.
                                 PID=\$(pgrep -f ${appName})
                                 if [ -n "\$PID" ]; then
@@ -80,7 +80,8 @@ pipeline {
                                 fi
 
                                 # 환경 변수를 주입하여 새 애플리케이션을 백그라운드로 실행합니다.
-                                echo "Starting new process..."
+                                echo "Starting new process..." > ${remoteDir}/deploy.log
+
                                 export DOCUMENT_APP_DOMAIN_URL="${env.DOCUMENT_APP_DOMAIN_URL}"
                                 export DOCUMENT_APP_DOMAIN_FRONT_URL="${env.DOCUMENT_APP_DOMAIN_FRONT_URL}"
                                 export DOCUMENT_APP_DATASOURCE_USERNAME="${env.DOCUMENT_APP_DATASOURCE_USERNAME}"
@@ -89,7 +90,7 @@ pipeline {
                                 
                                 nohup java -jar ${remoteDir}/${appName} > ${remoteDir}/app.log 2>&1 &
                                 
-                                echo "Deployment completed successfully."
+                                echo "Deployment completed successfully." > ${remoteDir}/deploy.log
                             '
                         """
                     }
