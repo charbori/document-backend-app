@@ -10,6 +10,7 @@ pipeline {
         DOCUMENT_APP_DATASOURCE_USERNAME = credentials('DOCUMENT_APP_DATASOURCE_USERNAME')
         DOCUMENT_APP_DATASOURCE_PASSWORD = credentials('DOCUMENT_APP_DATASOURCE_PASSWORD')
         DOCUMENT_APP_AES_SECRET_KEY      = credentials('DOCUMENT_APP_AES_SECRET_KEY')
+        DOCUMENT_APP_JWT_SECRET          = credentials('DOCUMENT_APP_JWT_SECRET')
         //DOCUMENT_APP_DEPLOY_SSH_KEY      = credentials('DOCUMENT_APP_DEPLOY_SSH_KEY')
 
     }
@@ -62,6 +63,8 @@ pipeline {
                         def remoteDir = '/home/ubuntu/app' // 👈 JAR 파일을 업로드할 서버 디렉토리
                         def jarFile = findFiles(glob: 'build/libs/web-differ*.jar')[0]
                         def appName = jarFile.name
+                        def appLog = "${remoteDir}/app-${env.BUILD_NUMBER}.log"
+                        def deployLog = "${remoteDir}/deploy-${env.BUILD_NUMBER}.log"
 
                         echo "Deploying ${appName} to ${remoteUser}@${remoteHost}"
 
@@ -71,6 +74,15 @@ pipeline {
                         // --- 5. ssh를 이용해 원격 배포 스크립트 실행 ---
                         sh """
                             ssh -o StrictHostKeyChecking=no ${remoteUser}@${remoteHost} '
+                                echo "=================================================================" >> ${deployLog}
+                                echo "Starting new deployment..." >> ${deployLog}
+                                echo "Deploy Time      : \$(date)" >> ${deployLog}
+                                echo "Jenkins Build    : #${env.BUILD_NUMBER}" >> ${deployLog}
+                                echo "Jenkins Build URL: ${env.BUILD_URL}" >> ${deployLog}
+                                echo "Git Commit Hash  : ${env.GIT_COMMIT}" >> ${deployLog}
+                                echo "Deployed JAR     : ${appName}" >> ${deployLog}
+                                echo "=================================================================" >> ${deployLog}
+
                                 # 기존에 실행 중인 애플리케이션 프로세스를 종료합니다.
                                 PID=\$(pgrep -f ${appName})
                                 if [ -n "\$PID" ]; then
@@ -80,20 +92,20 @@ pipeline {
                                 fi
 
                                 # 환경 변수를 주입하여 새 애플리케이션을 백그라운드로 실행합니다.
-                                echo "Starting new process..." > ${remoteDir}/deploy.log
+                                echo "Starting new process..." >> ${deployLog}
 
                                 export DOCUMENT_APP_DOMAIN_URL="${env.DOCUMENT_APP_DOMAIN_URL}"
                                 export DOCUMENT_APP_DOMAIN_FRONT_URL="${env.DOCUMENT_APP_DOMAIN_FRONT_URL}"
                                 export DOCUMENT_APP_DATASOURCE_USERNAME="${env.DOCUMENT_APP_DATASOURCE_USERNAME}"
                                 export DOCUMENT_APP_DATASOURCE_PASSWORD="${env.DOCUMENT_APP_DATASOURCE_PASSWORD}"
                                 export DOCUMENT_APP_AES_SECRET_KEY="${env.DOCUMENT_APP_AES_SECRET_KEY}"
+                                export DOCUMENT_APP_JWT_SECRET="${env.DOCUMENT_APP_JWT_SECRET}"
 
+                                echo $DOCUMENT_APP_AES_SECRET_KEY >> ${deployLog}
 
-                                echo $DOCUMENT_APP_AES_SECRET_KEY > ${remoteDir}/deploy.log
-
-                                nohup java -jar ${remoteDir}/${appName} --spring.profiles.active=prod > ${remoteDir}/app.log 2>&1 &
+                                nohup java -jar ${remoteDir}/${appName} --spring.profiles.active=prod >> ${appLog} 2>&1 &
                                 
-                                echo "Deployment completed successfully." > ${remoteDir}/deploy.log
+                                echo "Deployment completed successfully." >> ${deployLog}
                             '
                         """
                     }
