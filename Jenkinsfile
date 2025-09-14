@@ -100,8 +100,7 @@ pipeline {
                                 export DOCUMENT_APP_DATASOURCE_PASSWORD="${env.DOCUMENT_APP_DATASOURCE_PASSWORD}"
                                 export DOCUMENT_APP_AES_SECRET_KEY="${env.DOCUMENT_APP_AES_SECRET_KEY}"
                                 export DOCUMENT_APP_JWT_SECRET="${env.DOCUMENT_APP_JWT_SECRET}"
-
-                                echo $DOCUMENT_APP_AES_SECRET_KEY >> ${deployLog}
+                                echo "${DOCUMENT_APP_AES_SECRET_KEY}" >> ${deployLog}
 
                                 nohup java -jar ${remoteDir}/${appName} --spring.profiles.active=prod >> ${appLog} 2>&1 &
                                 
