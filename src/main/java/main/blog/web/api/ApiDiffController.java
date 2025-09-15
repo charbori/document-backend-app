@@ -83,12 +83,9 @@ public class ApiDiffController {
             offset = (documentListDTO.get_start()) / pageSize;
             pageSize = documentListDTO.get_end() - documentListDTO.get_start();
         }
-        
         Sort sortData = Sort.by(documentListDTO.get_order().equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, documentListDTO.get_sort());
         Pageable paging = PageRequest.of(offset, pageSize, sortData);
-        
         List<DiffResultEntity> diffResults = diffService.getDiffResultList(customUserDetails.getUserInfoDTO().toUserEntity(), paging);
-        
         List<DiffResponseDTO> diffResponseList = diffResults.stream()
                 .map(entity -> {
                     DiffResponseDTO dto = new DiffResponseDTO();
@@ -223,12 +220,10 @@ public class ApiDiffController {
     }
 
     private static CustomUserDetails getAuthenticatedUserDetail() {
-        log.info("start authenticate");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
             throw new BadCredentialsException("로그인을 해주세요.");
         }
-        log.info("get user credential :{} {}", authentication.getPrincipal(), authentication.getPrincipal().equals("anonymousUser"));
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
         return customUserDetails;
     }
