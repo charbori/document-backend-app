@@ -1,7 +1,5 @@
 FROM amazoncorretto:17.0.7-alpine
 
-RUN whoami
-
 # Add app user
 ARG APPLICATION_USER=ubuntu
 RUN adduser --no-create-home -u 1001 -D $APPLICATION_USER
