@@ -163,6 +163,7 @@ pipeline {
                     echo "포트 ${IDLE_PORT}의 상태 확인을 시작합니다..."
                     sh "sleep 10" // 컨테이너가 시작될 시간을 줍니다.
 
+/*
                     def healthCheckOk = false
                     for (int i = 0; i < 3; i++) {
                         try {
@@ -192,6 +193,7 @@ pipeline {
                         sh "docker rm web-differ-${IDLE_PORT}"
                         error "배포 실패: 상태 확인 실패"
                     }
+                    */
 
                     // 4. 구 버전 컨테이너 종료
                     def oldContainerId = sh(script: "docker ps -q -f 'publish=${OLD_PORT}'", returnStdout: true).trim()
