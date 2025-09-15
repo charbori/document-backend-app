@@ -149,7 +149,7 @@ pipeline {
                     echo "새 컨테이너를 ${IDLE_PORT} 포트에서 시작합니다..."
                     // docker.image(...).run(...)을 사용하여 컨테이너 실행
                     def newContainer = docker.image("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}").run(
-                        "-d --name web-differ-${IDLE_PORT} -p ${IDLE_PORT}:8080 " +
+                        "--name web-differ-${IDLE_PORT} -p ${IDLE_PORT}:8080 " +
                         "-e SPRING_PROFILES_ACTIVE=prod " +
                         "-e DOCUMENT_APP_DOMAIN_URL=${env.DOCUMENT_APP_DOMAIN_URL} " +
                         "-e DOCUMENT_APP_DOMAIN_FRONT_URL=${env.DOCUMENT_APP_DOMAIN_FRONT_URL} " +
