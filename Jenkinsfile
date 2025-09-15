@@ -156,6 +156,7 @@ pipeline {
                         "-e DOCUMENT_APP_DATASOURCE_USERNAME=${env.DOCUMENT_APP_DATASOURCE_USERNAME} " +
                         "-e DOCUMENT_APP_DATASOURCE_PASSWORD=${env.DOCUMENT_APP_DATASOURCE_PASSWORD} " +
                         "-e DOCUMENT_APP_AES_SECRET_KEY=${env.DOCUMENT_APP_AES_SECRET_KEY}"
+                        "-e DOCUMENT_APP_JWT_SECRET=${env.DOCUMENT_APP_JWT_SECRET}"
                     )
 
                     // 3. 상태 확인 (Health Check)
