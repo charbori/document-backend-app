@@ -150,13 +150,13 @@ pipeline {
                     // docker.image(...).run(...)을 사용하여 컨테이너 실행
                     def newContainer = docker.image("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}").run(
                         "--name web-differ-${IDLE_PORT} -p ${IDLE_PORT}:8080 " +
-                        "-e SPRING_PROFILES_ACTIVE=prod " +
-                        "-e DOCUMENT_APP_DOMAIN_URL=${env.DOCUMENT_APP_DOMAIN_URL} " +
-                        "-e DOCUMENT_APP_DOMAIN_FRONT_URL=${env.DOCUMENT_APP_DOMAIN_FRONT_URL} " +
-                        "-e DOCUMENT_APP_DATASOURCE_USERNAME=${env.DOCUMENT_APP_DATASOURCE_USERNAME} " +
-                        "-e DOCUMENT_APP_DATASOURCE_PASSWORD=${env.DOCUMENT_APP_DATASOURCE_PASSWORD} " +
-                        "-e DOCUMENT_APP_AES_SECRET_KEY=${env.DOCUMENT_APP_AES_SECRET_KEY} " +
-                        "-e DOCUMENT_APP_JWT_SECRET=${env.DOCUMENT_APP_JWT_SECRET}"
+                        "-e 'SPRING_PROFILES_ACTIVE=prod' " +
+                        "-e 'DOCUMENT_APP_DOMAIN_URL=${env.DOCUMENT_APP_DOMAIN_URL}' " +
+                        "-e 'DOCUMENT_APP_DOMAIN_FRONT_URL=${env.DOCUMENT_APP_DOMAIN_FRONT_URL}' " +
+                        "-e 'DOCUMENT_APP_DATASOURCE_USERNAME=${env.DOCUMENT_APP_DATASOURCE_USERNAME}' " +
+                        "-e 'DOCUMENT_APP_DATASOURCE_PASSWORD=${env.DOCUMENT_APP_DATASOURCE_PASSWORD}' " +
+                        "-e 'DOCUMENT_APP_AES_SECRET_KEY=${env.DOCUMENT_APP_AES_SECRET_KEY}' " +
+                        "-e 'DOCUMENT_APP_JWT_SECRET=${env.DOCUMENT_APP_JWT_SECRET}'"
                     )
 
                     // 3. 상태 확인 (Health Check)
